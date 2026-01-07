@@ -476,7 +476,7 @@ app.get('/admin', (req, res) => {
 
     async function loadImages() {
       try {
-        const response = await fetch('http://localhost:5001/available-images');
+        const response = await fetch('/available-images');
         availableImages = await response.json();
         renderImageSelector();
       } catch (error) {
@@ -501,12 +501,12 @@ app.get('/admin', (req, res) => {
     function selectImage(imageName) {
       document.querySelectorAll('.image-option').forEach(el => el.classList.remove('selected'));
       event.currentTarget.classList.add('selected');
-      document.getElementById('productImage').value = 'http://localhost:5001/images/' + imageName;
+      document.getElementById('productImage').value = '/images/' + imageName;
     }
 
     async function loadProducts() {
       try {
-        const response = await fetch('http://localhost:5001/products');
+        const response = await fetch('/products');
         products = await response.json();
         renderProducts();
       } catch (error) {
@@ -550,7 +550,7 @@ app.get('/admin', (req, res) => {
 
     async function toggleStock(productId, newStatus) {
       try {
-        const response = await fetch('http://localhost:5001/products/' + productId + '/stock', {
+        const response = await fetch('/products/' + productId + '/stock', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ in_stock: newStatus })
@@ -606,7 +606,7 @@ app.get('/admin', (req, res) => {
         image_url: document.getElementById('productImage').value
       };
       try {
-        const url = productId ? 'http://localhost:5001/products/' + productId : 'http://localhost:5001/products';
+        const url = productId ? '/products/' + productId : '/products';
         const method = productId ? 'PUT' : 'POST';
         const response = await fetch(url, {
           method: method,
@@ -626,7 +626,7 @@ app.get('/admin', (req, res) => {
     async function deleteProduct(productId, name) {
       if (!confirm('בטוח למחוק את "' + name + '"?')) return;
       try {
-        const response = await fetch('http://localhost:5001/products/' + productId, { method: 'DELETE' });
+        const response = await fetch('/products/' + productId, { method: 'DELETE' });
         if (response.ok) {
           showNotification('מוצר נמחק בהצלחה! 🗑️');
           loadProducts();
@@ -1013,7 +1013,7 @@ cron.schedule('30 19 * * *', async () => {
   const message = await generateDailyReport();
 
   if (message) {
-    const phoneNumber = '972500000000'; // 🔴 שנה למספר שלך!
+    const phoneNumber = '972507559099'; // 🔴 שנה למספר שלך!
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
     console.log('📊 ════════════════════════════════════');
