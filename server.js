@@ -193,23 +193,77 @@ app.get('/admin', (req, res) => {
       padding: 25px;
       border-radius: 15px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      margin-bottom: 30px;
+      margin-bottom: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
     }
-    h1 { color: #ff6b35; font-size: 32px; }
+    h1 { color: #ff6b35; font-size: 28px; } /* קצת הקטנתי שייכנס יפה בנייד */
+    
+    /* --- תוספות חדשות לחיפוש וסינון --- */
+    .controls-area {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .search-box {
+      width: 100%;
+      padding: 12px 20px;
+      border: 2px solid #ddd;
+      border-radius: 25px;
+      font-size: 16px;
+      margin-bottom: 15px;
+      transition: all 0.3s;
+      outline: none;
+    }
+    .search-box:focus {
+      border-color: #ff6b35;
+      box-shadow: 0 0 10px rgba(255, 107, 53, 0.2);
+    }
+    .filter-buttons {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 5px;
+      scrollbar-width: none; /* Firefox */
+    }
+    .filter-buttons::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+    
+    .filter-btn {
+      padding: 8px 16px;
+      background: #f0f0f0;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      white-space: nowrap;
+      font-weight: bold;
+      color: #555;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover { background: #e0e0e0; }
+    .filter-btn.active {
+      background: #ff6b35;
+      color: white;
+      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.4);
+    }
+    /* ---------------------------------- */
+
     .status {
       display: flex;
       align-items: center;
       gap: 10px;
       background: #f0f0f0;
-      padding: 10px 20px;
+      padding: 8px 15px;
       border-radius: 25px;
+      font-size: 14px;
     }
     .status-dot {
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: #4caf50;
       animation: pulse 2s infinite;
@@ -235,7 +289,7 @@ app.get('/admin', (req, res) => {
     .btn-danger:hover { background: #da190b; }
     .products-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 20px;
       margin-top: 20px;
     }
@@ -262,12 +316,12 @@ app.get('/admin', (req, res) => {
       margin-bottom: 15px;
     }
     .product-name {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: bold;
       color: #333;
     }
     .product-price {
-      font-size: 24px;
+      font-size: 22px;
       color: #4caf50;
       font-weight: bold;
     }
@@ -277,7 +331,7 @@ app.get('/admin', (req, res) => {
       color: #1976d2;
       padding: 5px 12px;
       border-radius: 15px;
-      font-size: 14px;
+      font-size: 12px;
       margin: 10px 0;
     }
     .product-actions {
@@ -285,7 +339,7 @@ app.get('/admin', (req, res) => {
       gap: 10px;
       margin-top: 15px;
     }
-    .product-actions button { flex: 1; }
+    .product-actions button { flex: 1; font-size: 14px; padding: 10px; }
     .modal {
       display: none;
       position: fixed;
@@ -384,6 +438,7 @@ app.get('/admin', (req, res) => {
       cursor: pointer;
       box-shadow: 0 5px 20px rgba(0,0,0,0.3);
       transition: all 0.3s;
+      z-index: 999;
     }
     .add-product-btn:hover {
       transform: scale(1.1);
@@ -412,23 +467,41 @@ app.get('/admin', (req, res) => {
 <body>
   <div class="container">
     <header>
-      <h1>🍺 ממשק ניהול - קיוסק החברים</h1>
+      <h1>🍺 ממשק ניהול</h1>
       <div class="status">
         <div class="status-dot"></div>
-        <span>מכשירים מחוברים: <strong id="connectedCount">${connectedClients}</strong></span>
+        <span>מחוברים: <strong id="connectedCount">${connectedClients}</strong></span>
       </div>
     </header>
 
-    <div style="text-align: center; margin: 20px 0;">
+    <div style="text-align: center; margin-bottom: 20px;">
       <a href="/send-daily-whatsapp" class="btn btn-success" target="_blank" style="display: inline-block; text-decoration: none;">
         📊 דוח יומי לווטסאפ
       </a>
     </div>
+
+    <div class="controls-area">
+      <input type="text" id="searchInput" class="search-box" placeholder="🔍 חפש מוצר לפי שם..." oninput="filterProducts()">
+      
+      <div class="filter-buttons" id="categoryFilters">
+        <button class="filter-btn active" onclick="setCategory('הכל')">הכל</button>
+        <button class="filter-btn" onclick="setCategory('שתייה')">שתייה</button>
+        <button class="filter-btn" onclick="setCategory('אלכוהול')">אלכוהול</button>
+        <button class="filter-btn" onclick="setCategory('טבק וסיגריות')">טבק</button>
+        <button class="filter-btn" onclick="setCategory('גומי')">גומי</button>
+        <button class="filter-btn" onclick="setCategory('חטיפים')">חטיפים</button>
+        <button class="filter-btn" onclick="setCategory('גלונים')">גלונים</button>
+        <button class="filter-btn" onclick="setCategory('שוקולד')">שוקולד</button>
+      </div>
+    </div>
+
     <div class="products-grid" id="productsGrid">
       <p style="color: white; text-align: center;">טוען מוצרים...</p>
     </div>
   </div>
+
   <button class="add-product-btn" onclick="openAddModal()">+</button>
+
   <div class="modal" id="productModal">
     <div class="modal-content">
       <h2 id="modalTitle">הוספת מוצר חדש</h2>
@@ -470,9 +543,43 @@ app.get('/admin', (req, res) => {
     </div>
   </div>
   <div class="notification" id="notification"></div>
+  
   <script>
     let products = [];
     let availableImages = [];
+    let currentCategory = 'הכל'; // משתנה לשמירת הקטגוריה הנוכחית
+
+    // פונקציית סינון ראשית - משלבת חיפוש וקטגוריה
+    function filterProducts() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      
+      const filtered = products.filter(p => {
+        // בדיקת קטגוריה
+        const categoryMatch = currentCategory === 'הכל' || (p.category && p.category.includes(currentCategory)) || (currentCategory === 'כללי' && !p.category);
+        
+        // בדיקת חיפוש
+        const searchMatch = p.name.toLowerCase().includes(searchTerm);
+        
+        return categoryMatch && searchMatch;
+      });
+
+      renderProducts(filtered);
+    }
+
+    function setCategory(category) {
+      currentCategory = category;
+      
+      // עדכון ויזואלי של הכפתורים
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        if(btn.innerText.includes(category) || (category === 'הכל' && btn.innerText === 'הכל')) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      filterProducts(); // הפעלת הסינון
+    }
 
     async function loadImages() {
       try {
@@ -508,24 +615,28 @@ app.get('/admin', (req, res) => {
       try {
         const response = await fetch('/products');
         products = await response.json();
-        renderProducts();
+        filterProducts(); // שימוש בסינון במקום רינדור ישיר
       } catch (error) {
         console.error('שגיאה בטעינת מוצרים:', error);
       }
     }
 
-    function renderProducts() {
+    // הפונקציה מקבלת כרגע רשימה לרינדור
+    function renderProducts(listToRender) {
       const grid = document.getElementById('productsGrid');
-      if (products.length === 0) {
-        grid.innerHTML = '<p style="color: white; text-align: center;">אין מוצרים. לחץ על + להוספת מוצר ראשון!</p>';
+      // שימוש ברשימה המסוננת, או בכל המוצרים אם לא הועברה רשימה
+      const list = listToRender || products;
+
+      if (list.length === 0) {
+        grid.innerHTML = '<p style="color: white; text-align: center; grid-column: 1/-1;">לא נמצאו מוצרים התואמים לחיפוש.</p>';
         return;
       }
-      grid.innerHTML = products.map(p => {
+      
+      grid.innerHTML = list.map(p => {
         const outOfStock = !p.in_stock;
         const badge = outOfStock ? '<div style="position: absolute; top: 10px; right: 10px; background: red; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 12px; z-index: 10;">אזל מהמלאי</div>' : '';
         const opacity = outOfStock ? ' style="opacity: 0.6; position: relative;"' : '';
         const btnClass = outOfStock ? 'btn-success' : 'btn-danger';
-        const btnText = outOfStock ? '✅ החזר למלאי' : '📦 הוצא מהמלאי';
         
         return '<div class="product-card"' + opacity + '>' +
           badge +
@@ -538,11 +649,9 @@ app.get('/admin', (req, res) => {
             '<div class="product-price">' + p.price + ' ₪</div>' +
           '</div>' +
           '<div class="product-actions">' +
-            '<button class="btn ' + btnClass + '" onclick="toggleStock(' + p.id + ', ' + outOfStock + ')">הוצא מהמלאי' +
-          '</div>' +
-          '<div class="product-actions" style="margin-top: 10px;">' +
-            '<button class="btn btn-primary" onclick="editProduct(' + p.id + ')">✏️ ערוך</button>' +
-            '<button class="btn btn-danger" onclick="deleteProduct(' + p.id + ', \\'' + p.name.replace(/'/g, "\\\\'") + '\\')">🗑️ מחק</button>' +
+            '<button class="btn ' + btnClass + '" onclick="toggleStock(' + p.id + ', ' + outOfStock + ')">' + (outOfStock ? '✅ החזר' : '📦 הוצא') + '</button>' +
+            '<button class="btn btn-primary" onclick="editProduct(' + p.id + ')">✏️</button>' +
+            '<button class="btn btn-danger" onclick="deleteProduct(' + p.id + ', \\'' + p.name.replace(/'/g, "\\\\'") + '\\')">🗑️</button>' +
           '</div>' +
         '</div>';
       }).join('');
@@ -557,7 +666,12 @@ app.get('/admin', (req, res) => {
         });
         if (response.ok) {
           showNotification(newStatus ? '✅ המוצר חזר למלאי!' : '📦 המוצר הוצא מהמלאי!');
-          loadProducts();
+          
+          // עדכון לוקאלי של הרשימה כדי שלא נצטרך לרענן הכל
+          const prod = products.find(p => p.id === productId);
+          if(prod) prod.in_stock = newStatus;
+          
+          filterProducts(); // רינדור מחדש עם הסינון הנוכחי
         }
       } catch (error) {
         showNotification('שגיאה: ' + error.message, true);
@@ -616,7 +730,7 @@ app.get('/admin', (req, res) => {
         if (response.ok) {
           showNotification(productId ? 'מוצר עודכן בהצלחה! ✅' : 'מוצר נוסף בהצלחה! ✅');
           closeModal();
-          loadProducts();
+          loadProducts(); // טוען הכל מחדש ומפעיל את הסינון
         }
       } catch (error) {
         showNotification('שגיאה: ' + error.message, true);
@@ -649,6 +763,11 @@ app.get('/admin', (req, res) => {
   </script>
 </body>
 </html>`;
+
+  res.send(html);
+});
+
+    
 
   res.send(html);
 });
