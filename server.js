@@ -172,6 +172,7 @@ app.get('/notify-update', (req, res) => {
   `);
 });
 
+// --- כאן השינוי היחיד: נתיב הניהול המעודכן עם חיפוש וסינון ---
 app.get('/admin', (req, res) => {
   const html = `<!DOCTYPE html>
 <html dir="rtl">
@@ -200,7 +201,7 @@ app.get('/admin', (req, res) => {
       flex-wrap: wrap;
       gap: 15px;
     }
-    h1 { color: #ff6b35; font-size: 28px; } /* קצת הקטנתי שייכנס יפה בנייד */
+    h1 { color: #ff6b35; font-size: 28px; }
     
     /* --- תוספות חדשות לחיפוש וסינון --- */
     .controls-area {
@@ -229,9 +230,9 @@ app.get('/admin', (req, res) => {
       gap: 10px;
       overflow-x: auto;
       padding-bottom: 5px;
-      scrollbar-width: none; /* Firefox */
+      scrollbar-width: none;
     }
-    .filter-buttons::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+    .filter-buttons::-webkit-scrollbar { display: none; }
     
     .filter-btn {
       padding: 8px 16px;
@@ -547,29 +548,20 @@ app.get('/admin', (req, res) => {
   <script>
     let products = [];
     let availableImages = [];
-    let currentCategory = 'הכל'; // משתנה לשמירת הקטגוריה הנוכחית
+    let currentCategory = 'הכל';
 
-    // פונקציית סינון ראשית - משלבת חיפוש וקטגוריה
     function filterProducts() {
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-      
       const filtered = products.filter(p => {
-        // בדיקת קטגוריה
         const categoryMatch = currentCategory === 'הכל' || (p.category && p.category.includes(currentCategory)) || (currentCategory === 'כללי' && !p.category);
-        
-        // בדיקת חיפוש
         const searchMatch = p.name.toLowerCase().includes(searchTerm);
-        
         return categoryMatch && searchMatch;
       });
-
       renderProducts(filtered);
     }
 
     function setCategory(category) {
       currentCategory = category;
-      
-      // עדכון ויזואלי של הכפתורים
       document.querySelectorAll('.filter-btn').forEach(btn => {
         if(btn.innerText.includes(category) || (category === 'הכל' && btn.innerText === 'הכל')) {
           btn.classList.add('active');
@@ -577,8 +569,7 @@ app.get('/admin', (req, res) => {
           btn.classList.remove('active');
         }
       });
-
-      filterProducts(); // הפעלת הסינון
+      filterProducts();
     }
 
     async function loadImages() {
@@ -615,16 +606,14 @@ app.get('/admin', (req, res) => {
       try {
         const response = await fetch('/products');
         products = await response.json();
-        filterProducts(); // שימוש בסינון במקום רינדור ישיר
+        filterProducts();
       } catch (error) {
         console.error('שגיאה בטעינת מוצרים:', error);
       }
     }
 
-    // הפונקציה מקבלת כרגע רשימה לרינדור
     function renderProducts(listToRender) {
       const grid = document.getElementById('productsGrid');
-      // שימוש ברשימה המסוננת, או בכל המוצרים אם לא הועברה רשימה
       const list = listToRender || products;
 
       if (list.length === 0) {
@@ -666,12 +655,9 @@ app.get('/admin', (req, res) => {
         });
         if (response.ok) {
           showNotification(newStatus ? '✅ המוצר חזר למלאי!' : '📦 המוצר הוצא מהמלאי!');
-          
-          // עדכון לוקאלי של הרשימה כדי שלא נצטרך לרענן הכל
           const prod = products.find(p => p.id === productId);
           if(prod) prod.in_stock = newStatus;
-          
-          filterProducts(); // רינדור מחדש עם הסינון הנוכחי
+          filterProducts();
         }
       } catch (error) {
         showNotification('שגיאה: ' + error.message, true);
@@ -730,7 +716,7 @@ app.get('/admin', (req, res) => {
         if (response.ok) {
           showNotification(productId ? 'מוצר עודכן בהצלחה! ✅' : 'מוצר נוסף בהצלחה! ✅');
           closeModal();
-          loadProducts(); // טוען הכל מחדש ומפעיל את הסינון
+          loadProducts();
         }
       } catch (error) {
         showNotification('שגיאה: ' + error.message, true);
@@ -767,11 +753,6 @@ app.get('/admin', (req, res) => {
   res.send(html);
 });
 
-    
-
-  res.send(html);
-});
-
 app.post('/record-order', async (req, res) => {
   try {
     const { orderId, items, total } = req.body;
@@ -795,9 +776,6 @@ app.post('/record-order', async (req, res) => {
 // נתיב לשליחת דוח לווטסאפ - גרסה מתוקנת ✅
 app.get('/send-daily-whatsapp', async (req, res) => {
   try {
-    // שליפה ישירה מהדאטאבייס (ללא fetch)
-
-    // שליפת 3 המוצרים הכי נמכרים של היום
     const topProductsQuery = `
       SELECT 
         product_name,
@@ -812,7 +790,6 @@ app.get('/send-daily-whatsapp', async (req, res) => {
 
     const topProducts = await pool.query(topProductsQuery);
 
-    // שליפת סך ההכנסות של היום
     const totalRevenueQuery = `
       SELECT 
         COALESCE(SUM(total), 0) as daily_revenue,
@@ -830,7 +807,6 @@ app.get('/send-daily-whatsapp', async (req, res) => {
       reportDate: new Date().toLocaleDateString('he-IL')
     };
 
-    // בניית ההודעה
     let message = `📊 *דוח יומי - ${reportData.reportDate}*\n\n`;
     message += `💰 *סך הכנסות:* ${parseFloat(reportData.dailyRevenue).toFixed(2)} ₪\n`;
     message += `🛒 *מספר הזמנות:* ${reportData.totalOrders}\n\n`;
@@ -846,11 +822,9 @@ app.get('/send-daily-whatsapp', async (req, res) => {
       });
     }
 
-    // יצירת קישור לווטסאפ
-    const phoneNumber = '972556659494'; // 🔴 כאן תשנה למספר שלך!
+    const phoneNumber = '972556659494';
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
-    // החזרת דף HTML עם כפתור לשליחה
     res.send(`
       <!DOCTYPE html>
       <html dir="rtl">
@@ -940,7 +914,6 @@ app.get('/send-daily-whatsapp', async (req, res) => {
   }
 });
 
-// נתיב לבדיקת הדוח (ללא שליחה)
 app.get('/test-daily-report', async (req, res) => {
   const message = await generateDailyReport();
 
@@ -1030,10 +1003,8 @@ app.get('/', (req, res) => {
   `);
 });
 
-// פונקציה ליצירת דוח יומי
 async function generateDailyReport() {
   try {
-    // שליפת 3 המוצרים הכי נמכרים של היום
     const topProductsQuery = `
       SELECT 
         product_name,
@@ -1048,7 +1019,6 @@ async function generateDailyReport() {
 
     const topProducts = await pool.query(topProductsQuery);
 
-    // שליפת סך ההכנסות של היום
     const totalRevenueQuery = `
       SELECT 
         COALESCE(SUM(total), 0) as daily_revenue,
@@ -1066,7 +1036,6 @@ async function generateDailyReport() {
       reportDate: new Date().toLocaleDateString('he-IL')
     };
 
-    // בניית ההודעה
     let message = `📊 *דוח יומי - ${reportData.reportDate}*\n\n`;
     message += `💰 *סך הכנסות:* ${parseFloat(reportData.dailyRevenue).toFixed(2)} ₪\n`;
     message += `🛒 *מספר הזמנות:* ${reportData.totalOrders}\n\n`;
@@ -1089,32 +1058,27 @@ async function generateDailyReport() {
   }
 }
 
-// תזמון שליחה אוטומטית כל יום ב-19:30
 cron.schedule('30 19 * * *', async () => {
   console.log('⏰ מפיק דוח יומי אוטומטי...');
 
   const message = await generateDailyReport();
 
   if (message) {
-    const phoneNumber = '972500000000'; // 🔴 שנה למספר שלך!
+    const phoneNumber = '972500000000';
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
     console.log('📊 ════════════════════════════════════');
     console.log('✅ דוח יומי נוצר בהצלחה!');
     console.log('📅 תאריך:', new Date().toLocaleString('he-IL'));
-    console.log('');
-    console.log('📱 לשליחה לווטסאפ, לחץ על הקישור:');
-    console.log(whatsappUrl);
-    console.log('');
-    console.log('🌐 או היכנס לדפדפן:');
-    console.log('http://localhost:5001/send-daily-whatsapp');
+    console.log('📱 קישור לשליחה:', whatsappUrl);
     console.log('════════════════════════════════════');
+
+    await notifyDailyReport();
   }
 }, {
   timezone: "Asia/Jerusalem"
 });
 
-// שליחת התראה לכל הלקוחות המחוברים
 async function notifyDailyReport() {
   const message = await generateDailyReport();
   if (message && connectedClients > 0) {
@@ -1125,28 +1089,6 @@ async function notifyDailyReport() {
     console.log(`📢 התראה נשלחה ל-${connectedClients} מכשירים מחוברים`);
   }
 }
-
-// תזמון עם התראה
-cron.schedule('30 19 * * *', async () => {
-  console.log('⏰ מפיק דוח יומי אוטומטי...');
-  const message = await generateDailyReport();
-
-  if (message) {
-    const phoneNumber = '972507559099'; // 🔴 שנה למספר שלך!
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-
-    console.log('📊 ════════════════════════════════════');
-    console.log('✅ דוח יומי נוצר בהצלחה!');
-    console.log('📅 תאריך:', new Date().toLocaleString('he-IL'));
-    console.log('📱 קישור לשליחה:', whatsappUrl);
-    console.log('════════════════════════════════════');
-
-    // שליחת התראה
-    await notifyDailyReport();
-  }
-}, {
-  timezone: "Asia/Jerusalem"
-});
 
 server.listen(5001, () => {
   console.log('🚀 שרת רץ על http://localhost:5001');
