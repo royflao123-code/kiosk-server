@@ -493,6 +493,9 @@ app.get('/admin', (req, res) => {
         <button class="filter-btn" onclick="setCategory('חטיפים')">חטיפים</button>
         <button class="filter-btn" onclick="setCategory('גלונים')">גלונים</button>
         <button class="filter-btn" onclick="setCategory('שוקולד')">שוקולד</button>
+        <button class="filter-btn" onclick="setCategory('ממתקים')">ממתקים</button>
+        <button class="filter-btn" onclick="setCategory('מזון מהיר')">מזון מהיר</button>
+        <button class="filter-btn" onclick="setCategory('מוצרי קפה')">מוצרי קפה</button>
       </div>
     </div>
 
@@ -527,6 +530,9 @@ app.get('/admin', (req, res) => {
             <option value="חטיפים">חטיפים</option>
             <option value="גלונים">גלונים</option>
             <option value="שוקולד">שוקולד</option>
+            <option value="ממתקים">ממתקים</option>
+            <option value="מזון מהיר">מזון מהיר</option>
+            <option value="מוצרי קפה">מוצרי קפה</option>
           </select>
         </div>
         <div class="form-group">
