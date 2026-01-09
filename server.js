@@ -551,6 +551,53 @@ app.get('/admin', (req, res) => {
       gap: 10px;
       margin-top: 15px;
     }
+
+    /* כפתור פלוס צף */
+    .fab-btn {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      width: 65px;
+      height: 65px;
+      background: #ff6b35;
+      color: white;
+      border-radius: 50%;
+      border: none;
+      font-size: 35px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      cursor: pointer;
+      z-index: 999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.3s;
+    }
+    .fab-btn:hover { transform: scale(1.1) rotate(90deg); background: #e85a2a; }
+
+    /* חלון קופץ */
+    .modal {
+      display: none; 
+      position: fixed; 
+      top: 0; left: 0; 
+      width: 100%; height: 100%; 
+      background: rgba(0,0,0,0.6); 
+      justify-content: center; align-items: center;
+      z-index: 1000;
+    }
+    .modal.show { display: flex; }
+    .modal-content {
+      background: white;
+      padding: 25px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 450px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+      position: relative;
+    }
+    .form-group { margin-bottom: 15px; text-align: right; }
+    .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; margin-top: 5px; }
+    .close-btn { position: absolute; top: 15px; left: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666; }
+
     .product-actions button { flex: 1; font-size: 14px; padding: 10px; }
   </style>
 </head>
@@ -599,6 +646,46 @@ app.get('/admin', (req, res) => {
           📊 הוצא דוח יומי לווטסאפ
         </a>
       </div>
+    </div>
+  </div>
+  <button class="fab-btn" onclick="openProductModal()">+</button>
+
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal()">✕</button>
+      <h2 id="modalTitle" style="text-align: center; margin-bottom: 20px; color: #333;">מוצר חדש</h2>
+      
+      <input type="hidden" id="editId">
+
+      <div class="form-group">
+        <label>שם המוצר</label>
+        <input type="text" id="prodName" class="form-control" placeholder="למשל: קולה זירו">
+      </div>
+
+      <div class="form-group">
+        <label>מחיר (₪)</label>
+        <input type="number" id="prodPrice" class="form-control" step="0.1">
+      </div>
+
+      <div class="form-group">
+        <label>קטגוריה</label>
+        <select id="prodCategory" class="form-control">
+          </select>
+      </div>
+
+      <div class="form-group">
+        <label>בחר תמונה (מהמאגר בשרת)</label>
+        <select id="prodImage" class="form-control" onchange="previewImage()">
+          <option value="">-- בחר תמונה --</option>
+        </select>
+        <div style="text-align: center; margin-top: 10px;">
+          <img id="imgPreview" src="" style="max-height: 100px; display: none; border-radius: 10px; border: 1px solid #ddd;">
+        </div>
+      </div>
+
+      <button class="btn btn-success" onclick="saveProduct()" style="width: 100%; padding: 15px; margin-top: 10px; font-size: 18px;">
+        💾 שמור מוצר
+      </button>
     </div>
   </div>
   <div class="notification" id="notification"></div>
@@ -692,6 +779,94 @@ app.get('/admin', (req, res) => {
         showNotification('❌ שגיאה', true);
       }
     }
+
+    // --- פונקציות לניהול מוצרים (הוספה/עריכה/מחיקה) ---
+
+async function openProductModal() {
+    // איפוס שדות
+    document.getElementById('editId').value = '';
+    document.getElementById('prodName').value = '';
+    document.getElementById('prodPrice').value = '';
+    document.getElementById('prodCategory').value = 'שתייה';
+    document.getElementById('prodImage').value = '';
+    document.getElementById('imgPreview').style.display = 'none';
+    document.getElementById('modalTitle').innerText = 'הוספת מוצר חדש';
+    
+    // טעינת רשימת התמונות מהשרת
+    await loadAvailableImages();
+    
+    document.getElementById('productModal').classList.add('show');
+}
+
+async function loadAvailableImages() {
+    try {
+        const res = await fetch('/available-images');
+        const images = await res.json();
+        const select = document.getElementById('prodImage');
+        select.innerHTML = '<option value="">-- בחר תמונה מהתיקייה --</option>';
+        images.forEach(img => {
+            const option = document.createElement('option');
+            option.value = img; // הנתיב המלא כמו /images/coke.png
+            option.text = img.replace('/images/', ''); // מציג רק את שם הקובץ
+            select.appendChild(option);
+        });
+    } catch (e) { console.error("שגיאה בטעינת תמונות", e); }
+}
+
+function previewImage() {
+    const val = document.getElementById('prodImage').value;
+    const img = document.getElementById('imgPreview');
+    if(val) { img.src = val; img.style.display = 'block'; }
+    else { img.style.display = 'none'; }
+}
+
+function closeModal() {
+    document.getElementById('productModal').classList.remove('show');
+}
+
+async function saveProduct() {
+    const id = document.getElementById('editId').value;
+    const data = {
+        name: document.getElementById('prodName').value,
+        price: parseFloat(document.getElementById('prodPrice').value),
+        category: document.getElementById('prodCategory').value,
+        image_url: document.getElementById('prodImage').value
+    };
+
+    if(!data.name || !data.price || !data.image_url) return alert("מלא את כל השדות!");
+
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? /products/${id} : '/products';
+
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        if(res.ok) {
+            showNotification(id ? "המוצר עודכן!" : "המוצר נוסף!");
+            closeModal();
+            loadProducts(); // רענון הרשימה (הפונקציה כבר קיימת אצלך)
+        }
+    } catch (e) { alert("שגיאה בשמירה"); }
+}
+
+// פונקציית עריכה שמתלבשת על המוצרים הקיימים
+function editProduct(id) {
+    const p = allProducts.find(x => x.id == id);
+    if(!p) return;
+    
+    openProductModal().then(() => {
+        document.getElementById('editId').value = p.id;
+        document.getElementById('prodName').value = p.name;
+        document.getElementById('prodPrice').value = p.price;
+        document.getElementById('prodCategory').value = p.category;
+        document.getElementById('prodImage').value = p.image_url;
+        document.getElementById('modalTitle').innerText = 'עריכת מוצר';
+        previewImage();
+    });
+}
 
     function updatePendingBadge() {
       const pending = orders.filter(o => o.status === 'pending' || !o.status).length;
