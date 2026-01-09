@@ -256,6 +256,8 @@ app.get('/notify-update', (req, res) => {
 });
 
 // --- כאן השינוי היחיד: נתיב הניהול המעודכן עם חיפוש וסינון ---
+// החלף את כל הנתיב app.get('/admin', ...) בזה:
+
 app.get('/admin', (req, res) => {
   const html = `<!DOCTYPE html>
 <html dir="rtl">
@@ -272,7 +274,6 @@ app.get('/admin', (req, res) => {
       padding: 20px;
     }
     .container { max-width: 1400px; margin: 0 auto; }
-    
     header {
       background: white;
       padding: 25px;
@@ -286,7 +287,6 @@ app.get('/admin', (req, res) => {
       gap: 15px;
     }
     h1 { color: #ff6b35; font-size: 28px; }
-    
     .status {
       display: flex;
       align-items: center;
@@ -307,8 +307,6 @@ app.get('/admin', (req, res) => {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
     }
-
-    /* טאבים */
     .tabs {
       display: flex;
       gap: 10px;
@@ -345,12 +343,8 @@ app.get('/admin', (req, res) => {
       font-size: 12px;
       margin-right: 8px;
     }
-
-    /* תוכן טאבים */
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-
-    /* סטיילים משותפים */
     .btn {
       padding: 12px 25px;
       border: none;
@@ -368,8 +362,6 @@ app.get('/admin', (req, res) => {
     .btn-danger:hover { background: #da190b; }
     .btn-info { background: #2196F3; color: white; }
     .btn-info:hover { background: #0b7dda; }
-
-    /* רשימת הזמנות */
     .orders-list {
       display: flex;
       flex-direction: column;
@@ -387,7 +379,6 @@ app.get('/admin', (req, res) => {
     .order-card.pending { border-right: 5px solid #ff9800; }
     .order-card.completed { border-right: 5px solid #4caf50; }
     .order-card.cancelled { border-right: 5px solid #f44336; }
-    
     .order-header {
       display: flex;
       justify-content: space-between;
@@ -414,7 +405,6 @@ app.get('/admin', (req, res) => {
     .status-pending { background: #fff3e0; color: #f57c00; }
     .status-completed { background: #e8f5e9; color: #2e7d32; }
     .status-cancelled { background: #ffebee; color: #c62828; }
-    
     .order-details {
       background: #f8f8f8;
       padding: 15px;
@@ -422,7 +412,6 @@ app.get('/admin', (req, res) => {
       margin: 15px 0;
     }
     .order-details p { margin: 5px 0; color: #555; }
-    
     .order-items {
       margin: 10px 0;
       padding: 10px;
@@ -437,15 +426,12 @@ app.get('/admin', (req, res) => {
       border-bottom: 1px solid #eee;
     }
     .order-item:last-child { border-bottom: none; }
-    
     .order-actions {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
     }
     .order-actions button { flex: 1; min-width: 120px; }
-
-    /* סינון הזמנות */
     .filter-section {
       background: rgba(255, 255, 255, 0.9);
       padding: 15px;
@@ -473,8 +459,6 @@ app.get('/admin', (req, res) => {
       background: #ff6b35;
       color: white;
     }
-
-    /* התראה על הזמנה חדשה */
     .notification {
       position: fixed;
       top: 20px;
@@ -494,8 +478,6 @@ app.get('/admin', (req, res) => {
       from { transform: translate(-50%, -100%); }
       to { transform: translate(-50%, 0); }
     }
-
-    /* סטיילים ישנים למוצרים */
     .controls-area {
       background: rgba(255, 255, 255, 0.9);
       padding: 15px;
@@ -516,13 +498,6 @@ app.get('/admin', (req, res) => {
     .search-box:focus {
       border-color: #ff6b35;
       box-shadow: 0 0 10px rgba(255, 107, 53, 0.2);
-    }
-    .filter-buttons {
-      display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      padding-bottom: 5px;
-      scrollbar-width: none;
     }
     .products-grid {
       display: grid;
@@ -588,22 +563,14 @@ app.get('/admin', (req, res) => {
         <span>מחוברים: <strong id="connectedCount">${connectedClients}</strong></span>
       </div>
     </header>
-
-    <!-- טאבים -->
     <div class="tabs">
-      <button class="tab-btn" onclick="switchTab('products')">
-        📦 ניהול מוצרים
-      </button>
+      <button class="tab-btn" onclick="switchTab('products')">📦 ניהול מוצרים</button>
       <button class="tab-btn active" onclick="switchTab('orders')">
-        <span class="badge" id="pendingBadge">0</span>
+        <span class="badge" id="pendingBadge" style="display:none;">0</span>
         🛒 הזמנות
       </button>
-      <button class="tab-btn" onclick="switchTab('reports')">
-        📊 דוחות
-      </button>
+      <button class="tab-btn" onclick="switchTab('reports')">📊 דוחות</button>
     </div>
-
-    <!-- טאב הזמנות -->
     <div class="tab-content active" id="ordersTab">
       <div class="filter-section">
         <div class="filter-buttons">
@@ -613,24 +580,19 @@ app.get('/admin', (req, res) => {
           <button class="filter-btn" onclick="filterOrders('cancelled')">בוטלו</button>
         </div>
       </div>
-
       <div class="orders-list" id="ordersList">
         <p style="text-align: center; color: white;">טוען הזמנות...</p>
       </div>
     </div>
-
-    <!-- טאב מוצרים -->
     <div class="tab-content" id="productsTab">
       <div class="controls-area">
-        <input type="text" id="searchInput" class="search-box" placeholder="🔍 חפש מוצר לפי שם..." oninput="filterProducts()">
+        <input type="text" id="searchInput" class="search-box" placeholder="🔍 חפש מוצר..." oninput="filterProducts()">
         <div class="filter-buttons" id="categoryFilters"></div>
       </div>
       <div class="products-grid" id="productsGrid">
         <p style="color: white; text-align: center;">טוען מוצרים...</p>
       </div>
     </div>
-
-    <!-- טאב דוחות -->
     <div class="tab-content" id="reportsTab">
       <div style="text-align: center; padding: 50px;">
         <a href="/send-daily-whatsapp" class="btn btn-success" target="_blank" style="display: inline-block; text-decoration: none; font-size: 20px; padding: 20px 40px;">
@@ -639,29 +601,25 @@ app.get('/admin', (req, res) => {
       </div>
     </div>
   </div>
-
   <div class="notification" id="notification"></div>
-  
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <script>
     let orders = [];
     let products = [];
     let currentFilter = 'all';
     let currentTab = 'orders';
+    let currentCategory = 'הכל';
 
-    // מעבר בין טאבים
     function switchTab(tab) {
       currentTab = tab;
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-      
       event.target.classList.add('active');
       document.getElementById(tab + 'Tab').classList.add('active');
-      
       if (tab === 'products') loadProducts();
       if (tab === 'orders') loadOrders();
     }
 
-    // טעינת הזמנות
     async function loadOrders() {
       try {
         const response = await fetch('/orders');
@@ -669,82 +627,48 @@ app.get('/admin', (req, res) => {
         renderOrders();
         updatePendingBadge();
       } catch (error) {
-        console.error('שגיאה בטעינת הזמנות:', error);
+        console.error('שגיאה:', error);
       }
     }
 
-    // הצגת הזמנות
     function renderOrders() {
       const list = document.getElementById('ordersList');
-      let filtered = orders;
-
-      if (currentFilter !== 'all') {
-        filtered = orders.filter(o => o.status === currentFilter);
-      }
-
+      let filtered = currentFilter === 'all' ? orders : orders.filter(o => o.status === currentFilter);
       if (filtered.length === 0) {
-        list.innerHTML = '<p style="text-align: center; color: white; padding: 50px;">אין הזמנות להצגה</p>';
+        list.innerHTML = '<p style="text-align: center; color: white; padding: 50px;">אין הזמנות</p>';
         return;
       }
-
       list.innerHTML = filtered.map(order => {
         const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
         const statusClass = order.status || 'pending';
-        const statusText = {
-          'pending': 'ממתינה',
-          'completed': 'הושלמה',
-          'cancelled': 'בוטלה'
-        }[statusClass] || 'ממתינה';
-
-        return \`
-          <div class="order-card \${statusClass}">
-            <div class="order-header">
-              <div class="order-info">
-                <h3>\${order.customer_name}</h3>
-                <p>📱 \${order.customer_phone}</p>
-                <p>📅 \${new Date(order.created_at).toLocaleString('he-IL')}</p>
-                <span class="order-status status-\${statusClass}">\${statusText}</span>
-              </div>
-              <div class="order-amount">\${parseFloat(order.total_amount).toFixed(2)} ₪</div>
-            </div>
-
-            <div class="order-details">
-              <p><strong>סוג משלוח:</strong> \${order.delivery_type}</p>
-              <p><strong>כתובת:</strong> \${order.shipping_location}</p>
-              <p><strong>תשלום:</strong> \${order.payment_method}</p>
-            </div>
-
-            <div class="order-items">
-              <h4>פריטים בהזמנה:</h4>
-              \${items.map(item => \`
-                <div class="order-item">
-                  <span>\${item.name} x\${item.quantity}</span>
-                  <span>\${(item.price * item.quantity).toFixed(2)} ₪</span>
-                </div>
-              \`).join('')}
-            </div>
-
-            <div class="order-actions">
-              <button class="btn btn-info" onclick="openWhatsApp('\${order.customer_phone}')">
-                📱 WhatsApp
-              </button>
-              \${order.status !== 'completed' ? \`
-                <button class="btn btn-success" onclick="updateOrderStatus('\${order.id}', 'completed')">
-                  ✅ סמן כהושלמה
-                </button>
-              \` : ''}
-              \${order.status !== 'cancelled' ? \`
-                <button class="btn btn-danger" onclick="updateOrderStatus('\${order.id}', 'cancelled')">
-                  ❌ בטל הזמנה
-                </button>
-              \` : ''}
-            </div>
-          </div>
-        \`;
+        const statusText = {pending: 'ממתינה', completed: 'הושלמה', cancelled: 'בוטלה'}[statusClass] || 'ממתינה';
+        return '<div class="order-card ' + statusClass + '">' +
+          '<div class="order-header">' +
+            '<div class="order-info">' +
+              '<h3>' + order.customer_name + '</h3>' +
+              '<p>📱 ' + order.customer_phone + '</p>' +
+              '<p>📅 ' + new Date(order.created_at).toLocaleString('he-IL') + '</p>' +
+              '<span class="order-status status-' + statusClass + '">' + statusText + '</span>' +
+            '</div>' +
+            '<div class="order-amount">' + parseFloat(order.total_amount).toFixed(2) + ' ₪</div>' +
+          '</div>' +
+          '<div class="order-details">' +
+            '<p><strong>סוג משלוח:</strong> ' + order.delivery_type + '</p>' +
+            '<p><strong>כתובת:</strong> ' + order.shipping_location + '</p>' +
+            '<p><strong>תשלום:</strong> ' + order.payment_method + '</p>' +
+          '</div>' +
+          '<div class="order-items"><h4>פריטים:</h4>' +
+            items.map(item => '<div class="order-item"><span>' + item.name + ' x' + item.quantity + '</span><span>' + (item.price * item.quantity).toFixed(2) + ' ₪</span></div>').join('') +
+          '</div>' +
+          '<div class="order-actions">' +
+            '<button class="btn btn-info" onclick="window.open(\\'https://wa.me/' + order.customer_phone + '\\', \\'_blank\\')">📱 WhatsApp</button>' +
+            (order.status !== 'completed' ? '<button class="btn btn-success" onclick="updateOrderStatus(\\'' + order.id + '\\', \\'completed\\')">✅ הושלמה</button>' : '') +
+            (order.status !== 'cancelled' ? '<button class="btn btn-danger" onclick="updateOrderStatus(\\'' + order.id + '\\', \\'cancelled\\')">❌ בטל</button>' : '') +
+          '</div>' +
+        '</div>';
       }).join('');
     }
 
-    // סינון הזמנות
     function filterOrders(status) {
       currentFilter = status;
       document.querySelectorAll('.filter-section .filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -752,46 +676,122 @@ app.get('/admin', (req, res) => {
       renderOrders();
     }
 
-    // עדכון סטטוס הזמנה
     async function updateOrderStatus(orderId, status) {
       if (!confirm('האם אתה בטוח?')) return;
-      
       try {
-        const response = await fetch(\`/orders/\${orderId}/status\`, {
+        const response = await fetch('/orders/' + orderId + '/status', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status })
         });
-        
         if (response.ok) {
-          showNotification('✅ הסטטוס עודכן בהצלחה!');
+          showNotification('✅ עודכן בהצלחה!');
           loadOrders();
         }
       } catch (error) {
-        showNotification('❌ שגיאה: ' + error.message, true);
+        showNotification('❌ שגיאה', true);
       }
     }
 
-    // פתיחת WhatsApp
-    function openWhatsApp(phone) {
-      window.open(\`https://wa.me/\${phone}\`, '_blank');
-    }
-
-    // עדכון תג ממתינות
     function updatePendingBadge() {
       const pending = orders.filter(o => o.status === 'pending' || !o.status).length;
-      document.getElementById('pendingBadge').textContent = pending;
-      document.getElementById('pendingBadge').style.display = pending > 0 ? 'inline-block' : 'none';
+      const badge = document.getElementById('pendingBadge');
+      badge.textContent = pending;
+      badge.style.display = pending > 0 ? 'inline-block' : 'none';
     }
 
-    // התראה על הזמנה חדשה
-    const socket = io();
-    socket.on('new_order', (order) => {
-      showNotification('🔔 הזמנה חדשה התקבלה!');
-      loadOrders();
-    });
+    async function loadProducts() {
+      try {
+        const response = await fetch('/products');
+        products = await response.json();
+        renderCategoryFilters();
+        filterProducts();
+      } catch (error) {
+        console.error('שגיאה:', error);
+      }
+    }
 
-    // הצגת הודעה
+    function renderCategoryFilters() {
+      const categories = ['הכל', 'שתייה', 'אלכוהול', 'טבק וסיגריות', 'גומי', 'חטיפים', 'גלונית', 'שוקולד', 'ממתקים', 'מזון מהיר', 'מוצרי קפה'];
+      document.getElementById('categoryFilters').innerHTML = categories.map(cat => 
+        '<button class="filter-btn' + (cat === currentCategory ? ' active' : '') + '" onclick="setCategory(\\'' + cat + '\\')">' + cat + '</button>'
+      ).join('');
+    }
+
+    function setCategory(category) {
+      currentCategory = category;
+      renderCategoryFilters();
+      filterProducts();
+    }
+
+    function filterProducts() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = products.filter(p => {
+        const categoryMatch = currentCategory === 'הכל' || (p.category && p.category.includes(currentCategory));
+        const searchMatch = p.name.toLowerCase().includes(searchTerm);
+        return categoryMatch && searchMatch;
+      });
+      renderProducts(filtered);
+    }
+
+    function renderProducts(list) {
+      const grid = document.getElementById('productsGrid');
+      if (list.length === 0) {
+        grid.innerHTML = '<p style="color: white; text-align: center; grid-column: 1/-1;">אין מוצרים</p>';
+        return;
+      }
+      grid.innerHTML = list.map(p => {
+        const outOfStock = !p.in_stock;
+        const badge = outOfStock ? '<div style="position: absolute; top: 10px; right: 10px; background: red; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 12px; z-index: 10;">אזל</div>' : '';
+        return '<div class="product-card" style="' + (outOfStock ? 'opacity: 0.6; position: relative;' : '') + '">' +
+          badge +
+          (p.image_url ? '<img src="' + p.image_url + '" class="product-image" alt="' + p.name + '">' : '') +
+          '<div class="product-header">' +
+            '<div>' +
+              '<div class="product-name">' + p.name + '</div>' +
+              '<span class="product-category">' + (p.category || 'כללי') + '</span>' +
+            '</div>' +
+            '<div class="product-price">' + p.price + ' ₪</div>' +
+          '</div>' +
+          '<div class="product-actions">' +
+            '<button class="btn ' + (outOfStock ? 'btn-success' : 'btn-danger') + '" onclick="toggleStock(' + p.id + ', ' + outOfStock + ')">' + (outOfStock ? '✅ החזר' : '📦 הוצא') + '</button>' +
+            '<button class="btn btn-danger" onclick="deleteProduct(' + p.id + ', \\'' + p.name.replace(/'/g, "\\'") + '\\')">🗑️</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    async function toggleStock(productId, newStatus) {
+      try {
+        const response = await fetch('/products/' + productId + '/stock', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ in_stock: newStatus })
+        });
+        if (response.ok) {
+          showNotification(newStatus ? '✅ חזר למלאי!' : '📦 הוצא מהמלאי!');
+          const prod = products.find(p => p.id === productId);
+          if(prod) prod.in_stock = newStatus;
+          filterProducts();
+        }
+      } catch (error) {
+        showNotification('❌ שגיאה', true);
+      }
+    }
+
+    async function deleteProduct(productId, name) {
+      if (!confirm('בטוח למחוק "' + name + '"?')) return;
+      try {
+        const response = await fetch('/products/' + productId, { method: 'DELETE' });
+        if (response.ok) {
+          showNotification('🗑️ נמחק!');
+          loadProducts();
+        }
+      } catch (error) {
+        showNotification('❌ שגיאה', true);
+      }
+    }
+
     function showNotification(message, isError) {
       const notif = document.getElementById('notification');
       notif.textContent = message;
@@ -800,15 +800,21 @@ app.get('/admin', (req, res) => {
       setTimeout(() => notif.classList.remove('show'), 3000);
     }
 
-    // טעינה ראשונית
+    const socket = io();
+    socket.on('new_order', (order) => {
+      showNotification('🔔 הזמנה חדשה!');
+      loadOrders();
+    });
+
     loadOrders();
-    setInterval(loadOrders, 30000); // רענון כל 30 שניות
+    setInterval(loadOrders, 30000);
   </script>
 </body>
 </html>`;
 
   res.send(html);
 });
+
 
 app.post('/record-order', async (req, res) => {
   try {
