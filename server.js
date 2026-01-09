@@ -62,6 +62,39 @@ app.get('/available-images', (req, res) => {
   });
 });
 
+// נתיב חדש ליצירת הזמנה במסד הנתונים
+app.post('/orders', async (req, res) => {
+  const { 
+    customer_name, 
+    customer_phone, 
+    total_amount, 
+    delivery_type, 
+    shipping_location, 
+    is_custom_location, 
+    payment_method, 
+    items 
+  } = req.body;
+
+  try {
+    const query = `
+      INSERT INTO orders (customer_name, customer_phone, total_amount, delivery_type, shipping_location, is_custom_location, payment_method, items)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING *;
+    `;
+    const values = [customer_name, customer_phone, total_amount, delivery_type, shipping_location, is_custom_location, payment_method, JSON.stringify(items)];
+    
+    const result = await pool.query(query, values);
+    
+    // שליחת עדכון בזמן אמת אם יש ממשק ניהול שמחובר ב-Socket
+    io.emit('new_order', result.rows[0]);
+    
+    res.status(201).json({ success: true, order: result.rows[0] });
+  } catch (err) {
+    console.error('❌ שגיאה בשמירת הזמנה:', err.message);
+    res.status(500).json({ error: 'שגיאה בשמירת הזמנה' });
+  }
+});
+
 app.get('/products', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM products ORDER BY name');
