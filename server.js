@@ -64,15 +64,15 @@ app.get('/available-images', (req, res) => {
 
 // נתיב חדש ליצירת הזמנה במסד הנתונים
 app.post('/orders', async (req, res) => {
-  const { 
-    customer_name, 
-    customer_phone, 
-    total_amount, 
-    delivery_type, 
-    shipping_location, 
-    is_custom_location, 
-    payment_method, 
-    items 
+  const {
+    customer_name,
+    customer_phone,
+    total_amount,
+    delivery_type,
+    shipping_location,
+    is_custom_location,
+    payment_method,
+    items
   } = req.body;
 
   try {
@@ -82,12 +82,12 @@ app.post('/orders', async (req, res) => {
       RETURNING *;
     `;
     const values = [customer_name, customer_phone, total_amount, delivery_type, shipping_location, is_custom_location, payment_method, JSON.stringify(items)];
-    
+
     const result = await pool.query(query, values);
-    
+
     // שליחת עדכון בזמן אמת אם יש ממשק ניהול שמחובר ב-Socket
     io.emit('new_order', result.rows[0]);
-    
+
     res.status(201).json({ success: true, order: result.rows[0] });
   } catch (err) {
     console.error('❌ שגיאה בשמירת הזמנה:', err.message);
@@ -134,10 +134,10 @@ app.delete('/orders/:id', async (req, res) => {
   try {
     const { id } = req.params;
     await pool.query('DELETE FROM orders WHERE id = $1', [id]);
-    
+
     // שליחת עדכון בזמן אמת
     io.emit('order_deleted', { id });
-    
+
     res.json({ success: true, message: 'הזמנה נמחקה בהצלחה' });
   } catch (err) {
     console.error('❌ שגיאה במחיקת הזמנה:', err.message);
@@ -693,6 +693,7 @@ app.get('/admin', (req, res) => {
   <script>
     let orders = [];
     let products = [];
+    let availableImages = [];
     let currentFilter = 'all';
     let currentTab = 'orders';
     let currentCategory = 'הכל';
@@ -748,9 +749,9 @@ app.get('/admin', (req, res) => {
             items.map(item => '<div class="order-item"><span>' + item.name + ' x' + item.quantity + '</span><span>' + (item.price * item.quantity).toFixed(2) + ' ₪</span></div>').join('') +
           '</div>' +
           '<div class="order-actions">' +
-            '<button class="btn btn-info" onclick="window.open(\\'https://wa.me/' + order.customer_phone + '\\', \\'_blank\\')">📱 WhatsApp</button>' +
-            (order.status !== 'completed' ? '<button class="btn btn-success" onclick="updateOrderStatus(\\'' + order.id + '\\', \\'completed\\')">✅ הושלמה</button>' : '') +
-            (order.status !== 'cancelled' ? '<button class="btn btn-danger" onclick="updateOrderStatus(\\'' + order.id + '\\', \\'cancelled\\')">❌ בטל</button>' : '') +
+            '<button class="btn btn-info" onclick="window.open(\'https://wa.me/' + order.customer_phone + '\', \'_blank\')">📱 WhatsApp</button>' +
+            '<button class="btn btn-success" style="' + (statusClass === 'completed' ? 'background: #4caf50;' : 'background: #ccc; opacity: 0.6;') + '" onclick="updateOrderStatus(\'' + order.id + '\', \'completed\')">✅ הושלמה</button>' +
+            '<button class="btn btn-danger" style="' + (statusClass === 'cancelled' ? 'background: #f44336;' : 'background: #ccc; opacity: 0.6;') + '" onclick="updateOrderStatus(\'' + order.id + '\', \'cancelled\')">❌ בטל</button>' +
           '</div>' +
         '</div>';
       }).join('');
@@ -830,8 +831,10 @@ app.get('/admin', (req, res) => {
       grid.innerHTML = list.map(p => {
         const outOfStock = !p.in_stock;
         const badge = outOfStock ? '<div style="position: absolute; top: 10px; right: 10px; background: red; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 12px; z-index: 10;">אזל</div>' : '';
-        return '<div class="product-card" style="' + (outOfStock ? 'opacity: 0.6; position: relative;' : '') + '">' +
+        const editIcon = '<div style="position: absolute; top: 15px; left: 15px; background: #2196F3; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 5;" onclick="editProduct(' + p.id + ')">✏️</div>';
+        return '<div class="product-card" style="' + (outOfStock ? 'opacity: 0.6; position: relative;' : 'position: relative;') + '">' +
           badge +
+          editIcon +
           (p.image_url ? '<img src="' + p.image_url + '" class="product-image" alt="' + p.name + '">' : '') +
           '<div class="product-header">' +
             '<div>' +
@@ -892,6 +895,98 @@ app.get('/admin', (req, res) => {
       showNotification('🔔 הזמנה חדשה!');
       loadOrders();
     });
+
+    async function loadAvailableImages() {
+  try {
+    const response = await fetch('/available-images');
+    availableImages = await response.json();
+    const select = document.getElementById('prodImage');
+    select.innerHTML = '<option value="">-- בחר תמונה --</option>' +
+      availableImages.map(img => '<option value="/images/' + img + '">' + img + '</option>').join('');
+  } catch (error) {
+    console.error('שגיאה בטעינת תמונות:', error);
+  }
+}
+
+function editProduct(productId) {
+  const product = products.find(p => p.id === productId);
+  if (!product) return;
+  
+  loadAvailableImages();
+  document.getElementById('modalTitle').textContent = 'ערוך מוצר';
+  document.getElementById('editId').value = product.id;
+  document.getElementById('prodName').value = product.name;
+  document.getElementById('prodPrice').value = product.price;
+  document.getElementById('prodCategory').value = product.category || 'כללי';
+  
+  setTimeout(() => {
+    document.getElementById('prodImage').value = product.image_url || '';
+    if (document.getElementById('prodImage').value) {
+      document.getElementById('imgPreview').src = product.image_url;
+      document.getElementById('imgPreview').style.display = 'block';
+    }
+  }, 200);
+  
+  document.getElementById('productModal').classList.add('show');
+}
+  function openProductModal() {
+      loadAvailableImages();
+      document.getElementById('modalTitle').textContent = 'מוצר חדש';
+      document.getElementById('editId').value = '';
+      document.getElementById('prodName').value = '';
+      document.getElementById('prodPrice').value = '';
+      document.getElementById('prodCategory').value = 'כללי';
+      document.getElementById('prodImage').value = '';
+      document.getElementById('imgPreview').style.display = 'none';
+      document.getElementById('productModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('productModal').classList.remove('show');
+    }
+
+    function previewImage() {
+      const select = document.getElementById('prodImage');
+      const preview = document.getElementById('imgPreview');
+      if (select.value) {
+        preview.src = select.value;
+        preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
+      }
+    }
+
+    async function saveProduct() {
+      const id = document.getElementById('editId').value;
+      const name = document.getElementById('prodName').value;
+      const price = document.getElementById('prodPrice').value;
+      const category = document.getElementById('prodCategory').value;
+      const image_url = document.getElementById('prodImage').value;
+
+      if (!name || !price) {
+        showNotification('❌ נא למלא שם ומחיר', true);
+        return;
+      }
+
+      try {
+        const url = id ? '/products/' + id : '/products';
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, price, image_url, category, in_stock: true })
+        });
+
+        if (response.ok) {
+          showNotification(id ? '✅ מוצר עודכן!' : '✅ מוצר נוסף!');
+          closeModal();
+          loadProducts();
+        }
+      } catch (error) {
+        showNotification('❌ שגיאה', true);
+      }
+    }
 
     loadOrders();
     setInterval(loadOrders, 30000);
