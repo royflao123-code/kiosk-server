@@ -800,11 +800,17 @@ app.get('/admin', (req, res) => {
     }
 
     function renderCategoryFilters() {
-      const categories = ['הכל', 'שתייה', 'אלכוהול', 'טבק וסיגריות', 'גומי', 'חטיפים', 'גלונית', 'שוקולד', 'ממתקים', 'מזון מהיר', 'מוצרי קפה'];
-      document.getElementById('categoryFilters').innerHTML = categories.map(cat => 
-        '<button class="filter-btn' + (cat === currentCategory ? ' active' : '') + '" onclick="setCategory(\\'' + cat + '\\')">' + cat + '</button>'
-      ).join('');
-    }
+  const categories = ['הכל', 'שתייה', 'אלכוהול', 'טבק וסיגריות', 'גומי', 'חטיפים', 'גלונית', 'שוקולד', 'ממתקים', 'מזון מהיר', 'מוצרי קפה'];
+  const container = document.getElementById('categoryFilters');
+  container.innerHTML = '';
+  categories.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (cat === currentCategory ? ' active' : '');
+    btn.textContent = cat;
+    btn.onclick = function() { setCategory(cat); };
+    container.appendChild(btn);
+  });
+}
 
     function setCategory(category) {
       currentCategory = category;
@@ -823,11 +829,72 @@ app.get('/admin', (req, res) => {
     }
 
     function renderProducts(list) {
-      const grid = document.getElementById('productsGrid');
-      if (list.length === 0) {
-        grid.innerHTML = '<p style="color: white; text-align: center; grid-column: 1/-1;">אין מוצרים</p>';
-        return;
-      }
+  const grid = document.getElementById('productsGrid');
+  grid.innerHTML = '';
+  
+  if (list.length === 0) {
+    grid.innerHTML = '<p style="color: white; text-align: center; grid-column: 1/-1;">אין מוצרים</p>';
+    return;
+  }
+  
+  list.forEach(p => {
+    const outOfStock = !p.in_stock;
+    
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    card.style.position = 'relative';
+    if (outOfStock) card.style.opacity = '0.6';
+    
+    // תג "אזל" אם אין במלאי
+    if (outOfStock) {
+      const badge = document.createElement('div');
+      badge.style.cssText = 'position: absolute; top: 10px; right: 10px; background: red; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 12px; z-index: 10;';
+      badge.textContent = 'אזל';
+      card.appendChild(badge);
+    }
+    
+    // כפתור עריכה
+    const editBtn = document.createElement('div');
+    editBtn.style.cssText = 'position: absolute; top: 15px; left: 15px; background: #2196F3; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 5;';
+    editBtn.textContent = '✏️';
+    editBtn.onclick = function() { editProduct(p.id); };
+    card.appendChild(editBtn);
+    
+    // תמונה
+    if (p.image_url) {
+      const img = document.createElement('img');
+      img.src = p.image_url;
+      img.className = 'product-image';
+      img.alt = p.name;
+      card.appendChild(img);
+    }
+    
+    // כותרת ומחיר
+    const header = document.createElement('div');
+    header.className = 'product-header';
+    header.innerHTML = '<div><div class="product-name">' + p.name + '</div><span class="product-category">' + (p.category || 'כללי') + '</span></div><div class="product-price">' + p.price + ' ₪</div>';
+    card.appendChild(header);
+    
+    // כפתורי פעולה
+    const actions = document.createElement('div');
+    actions.className = 'product-actions';
+    
+    const stockBtn = document.createElement('button');
+    stockBtn.className = 'btn ' + (outOfStock ? 'btn-success' : 'btn-danger');
+    stockBtn.textContent = outOfStock ? '✅ החזר' : '📦 הוצא';
+    stockBtn.onclick = function() { toggleStock(p.id, outOfStock); };
+    actions.appendChild(stockBtn);
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn btn-danger';
+    deleteBtn.textContent = '🗑️';
+    deleteBtn.onclick = function() { deleteProduct(p.id, p.name); };
+    actions.appendChild(deleteBtn);
+    
+    card.appendChild(actions);
+    grid.appendChild(card);
+  });
+}
       grid.innerHTML = list.map(p => {
         const outOfStock = !p.in_stock;
         const badge = outOfStock ? '<div style="position: absolute; top: 10px; right: 10px; background: red; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 12px; z-index: 10;">אזל</div>' : '';
