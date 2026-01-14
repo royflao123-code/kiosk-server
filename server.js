@@ -1175,6 +1175,7 @@ app.get('/admin', (req, res) => {
     }
 
     function saveProduct() {
+      var id = document.getElementById('editId').value;
       var name = document.getElementById('prodName').value;
       var price = document.getElementById('prodPrice').value;
       var category = document.getElementById('prodCategory').value;
