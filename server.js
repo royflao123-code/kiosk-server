@@ -264,7 +264,7 @@ app.get('/admin', (req, res) => {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ממשק ניהול all in one </title>
+  <title> all in one admin </title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -286,7 +286,7 @@ app.get('/admin', (req, res) => {
       flex-wrap: wrap;
       gap: 15px;
     }
-    h1 { color: #ff6b35; font-size: 28px; }
+    h1 { color: #171717; font-size: 28px; }
     .status {
       display: flex;
       align-items: center;
@@ -330,9 +330,9 @@ app.get('/admin', (req, res) => {
     }
     .tab-btn:hover { background: #e0e0e0; }
     .tab-btn.active {
-      background: linear-gradient(135deg, #ff6b35 0%, #e85a2a 100%);
+      background: linear-gradient(135deg, #171717 0%, #2e2e2e 100%);
       color: white;
-      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 4px 15px rgba(23, 23, 23, 0.4);
     }
     .tab-btn .badge {
       display: inline-block;
@@ -354,8 +354,8 @@ app.get('/admin', (req, res) => {
       transition: all 0.3s;
       font-weight: bold;
     }
-    .btn-primary { background: #ff6b35; color: white; }
-    .btn-primary:hover { background: #e85a2a; }
+    .btn-primary { background: #171717; color: white; }
+    .btn-primary:hover { background: #2e2e2e; }
     .btn-success { background: #4caf50; color: white; }
     .btn-success:hover { background: #45a049; }
     .btn-danger { background: #f44336; color: white; }
@@ -376,7 +376,7 @@ app.get('/admin', (req, res) => {
       transition: transform 0.3s;
     }
     .order-card:hover { transform: translateY(-3px); }
-    .order-card.pending { border-right: 5px solid #ff9800; }
+    .order-card.pending { border-right: 5px solid #171717; }
     .order-card.completed { border-right: 5px solid #4caf50; }
     .order-card.cancelled { border-right: 5px solid #f44336; }
     .order-header {
@@ -402,7 +402,7 @@ app.get('/admin', (req, res) => {
       font-weight: bold;
       text-transform: uppercase;
     }
-    .status-pending { background: #fff3e0; color: #f57c00; }
+    .status-pending { background: #fff3e0; color: #171717; }
     .status-completed { background: #e8f5e9; color: #2e7d32; }
     .status-cancelled { background: #ffebee; color: #c62828; }
     .order-details {
@@ -496,7 +496,7 @@ app.get('/admin', (req, res) => {
       outline: none;
     }
     .search-box:focus {
-      border-color: #101010;
+      border-color: #171717;
       box-shadow: 0 0 10px rgba(23, 23, 23, 0.2);
     }
     .products-grid {
@@ -511,6 +511,7 @@ app.get('/admin', (req, res) => {
       padding: 20px;
       box-shadow: 0 5px 15px rgba(0,0,0,0.2);
       transition: transform 0.3s;
+      position: relative;
     }
     .product-card:hover { transform: translateY(-5px); }
     .product-image {
@@ -551,15 +552,44 @@ app.get('/admin', (req, res) => {
       gap: 10px;
       margin-top: 15px;
     }
-
-    /* כפתור פלוס צף */
+    .product-actions button { flex: 1; font-size: 14px; padding: 10px; }
+    .out-of-stock-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: red;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-weight: bold;
+      font-size: 12px;
+      z-index: 10;
+    }
+    .edit-icon {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: #2196F3;
+      color: white;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 5;
+      border: none;
+      font-size: 16px;
+    }
     .fab-btn {
       position: fixed;
       bottom: 30px;
       left: 30px;
       width: 65px;
       height: 65px;
-      background: #2b2b2a;
+      background: #171717;
       color: white;
       border-radius: 50%;
       border: none;
@@ -573,15 +603,16 @@ app.get('/admin', (req, res) => {
       transition: transform 0.3s;
     }
     .fab-btn:hover { transform: scale(1.1) rotate(90deg); background: #171717; }
-
-    /* חלון קופץ */
     .modal {
-      display: none; 
-      position: fixed; 
-      top: 0; left: 0; 
-      width: 100%; height: 100%; 
-      background: rgba(0,0,0,0.6); 
-      justify-content: center; align-items: center;
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
       z-index: 1000;
     }
     .modal.show { display: flex; }
@@ -595,51 +626,69 @@ app.get('/admin', (req, res) => {
       position: relative;
     }
     .form-group { margin-bottom: 15px; text-align: right; }
-    .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; margin-top: 5px; }
-    .close-btn { position: absolute; top: 15px; left: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666; }
-
-    .product-actions button { flex: 1; font-size: 14px; padding: 10px; }
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 16px;
+      margin-top: 5px;
+    }
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>🏪 ממשק ניהול all in one /h1>
+      <h1>🏪 all in one admin </h1>
       <div class="status">
         <div class="status-dot"></div>
         <span>מחוברים: <strong id="connectedCount">${connectedClients}</strong></span>
       </div>
     </header>
+
     <div class="tabs">
-      <button class="tab-btn" onclick="switchTab('products')">📦 ניהול מוצרים</button>
-      <button class="tab-btn active" onclick="switchTab('orders')">
+      <button class="tab-btn" id="productsTabBtn">📦 ניהול מוצרים</button>
+      <button class="tab-btn active" id="ordersTabBtn">
         <span class="badge" id="pendingBadge" style="display:none;">0</span>
         🛒 הזמנות
       </button>
-      <button class="tab-btn" onclick="switchTab('reports')">📊 דוחות</button>
+      <button class="tab-btn" id="reportsTabBtn">📊 דוחות</button>
     </div>
+
     <div class="tab-content active" id="ordersTab">
       <div class="filter-section">
-        <div class="filter-buttons">
-          <button class="filter-btn active" onclick="filterOrders('all')">הכל</button>
-          <button class="filter-btn" onclick="filterOrders('pending')">ממתינות</button>
-          <button class="filter-btn" onclick="filterOrders('completed')">הושלמו</button>
-          <button class="filter-btn" onclick="filterOrders('cancelled')">בוטלו</button>
+        <div class="filter-buttons" id="orderFilters">
+          <button class="filter-btn active" data-filter="all">הכל</button>
+          <button class="filter-btn" data-filter="pending">ממתינות</button>
+          <button class="filter-btn" data-filter="completed">הושלמו</button>
+          <button class="filter-btn" data-filter="cancelled">בוטלו</button>
         </div>
       </div>
       <div class="orders-list" id="ordersList">
         <p style="text-align: center; color: white;">טוען הזמנות...</p>
       </div>
     </div>
+
     <div class="tab-content" id="productsTab">
       <div class="controls-area">
-        <input type="text" id="searchInput" class="search-box" placeholder="🔍 חפש מוצר..." oninput="filterProducts()">
+        <input type="text" id="searchInput" class="search-box" placeholder="🔍 חפש מוצר...">
         <div class="filter-buttons" id="categoryFilters"></div>
       </div>
       <div class="products-grid" id="productsGrid">
         <p style="color: white; text-align: center;">טוען מוצרים...</p>
       </div>
     </div>
+
     <div class="tab-content" id="reportsTab">
       <div style="text-align: center; padding: 50px;">
         <a href="/send-daily-whatsapp" class="btn btn-success" target="_blank" style="display: inline-block; text-decoration: none; font-size: 20px; padding: 20px 40px;">
@@ -648,161 +697,283 @@ app.get('/admin', (req, res) => {
       </div>
     </div>
   </div>
-  <button class="fab-btn" onclick="openProductModal()">+</button>
+
+  <button class="fab-btn" id="addProductBtn">+</button>
 
   <div id="productModal" class="modal">
     <div class="modal-content">
-      <button class="close-btn" onclick="closeModal()">✕</button>
+      <button class="close-btn" id="closeModalBtn">✕</button>
       <h2 id="modalTitle" style="text-align: center; margin-bottom: 20px; color: #333;">מוצר חדש</h2>
-      
       <input type="hidden" id="editId">
-
       <div class="form-group">
         <label>שם המוצר</label>
         <input type="text" id="prodName" class="form-control" placeholder="למשל: קולה זירו">
       </div>
-
       <div class="form-group">
         <label>מחיר (₪)</label>
         <input type="number" id="prodPrice" class="form-control" step="0.1">
       </div>
-
       <div class="form-group">
         <label>קטגוריה</label>
         <select id="prodCategory" class="form-control">
-          </select>
+          <option value="כללי">כללי</option>
+          <option value="שתייה">שתייה</option>
+          <option value="אלכוהול">אלכוהול</option>
+          <option value="טבק וסיגריות">טבק וסיגריות</option>
+          <option value="גומי">גומי</option>
+          <option value="חטיפים">חטיפים</option>
+          <option value="גלונית">גלונית</option>
+          <option value="שוקולד">שוקולד</option>
+          <option value="ממתקים">ממתקים</option>
+          <option value="מזון מהיר">מזון מהיר</option>
+          <option value="מוצרי קפה">מוצרי קפה</option>
+        </select>
       </div>
-
       <div class="form-group">
         <label>בחר תמונה (מהמאגר בשרת)</label>
-        <select id="prodImage" class="form-control" onchange="previewImage()">
+        <select id="prodImage" class="form-control">
           <option value="">-- בחר תמונה --</option>
         </select>
         <div style="text-align: center; margin-top: 10px;">
           <img id="imgPreview" src="" style="max-height: 100px; display: none; border-radius: 10px; border: 1px solid #ddd;">
         </div>
       </div>
-
-      <button class="btn btn-success" onclick="saveProduct()" style="width: 100%; padding: 15px; margin-top: 10px; font-size: 18px;">
+      <button class="btn btn-success" id="saveProductBtn" style="width: 100%; padding: 15px; margin-top: 10px; font-size: 18px;">
         💾 שמור מוצר
       </button>
     </div>
   </div>
+
   <div class="notification" id="notification"></div>
+
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <script>
-    let orders = [];
-    let products = [];
-    let currentFilter = 'all';
-    let currentTab = 'orders';
-    let currentCategory = 'הכל';
+    // משתנים גלובליים
+    var orders = [];
+    var products = [];
+    var availableImages = [];
+    var currentFilter = 'all';
+    var currentCategory = 'הכל';
 
+    // אתחול Socket.io
+    var socket = io();
+
+    socket.on('new_order', function(order) {
+      showNotification('🔔 הזמנה חדשה!');
+      loadOrders();
+    });
+
+    socket.on('order_updated', function(order) {
+      loadOrders();
+    });
+
+    // Event Listeners לטאבים
+    document.getElementById('productsTabBtn').addEventListener('click', function() {
+      switchTab('products');
+    });
+
+    document.getElementById('ordersTabBtn').addEventListener('click', function() {
+      switchTab('orders');
+    });
+
+    document.getElementById('reportsTabBtn').addEventListener('click', function() {
+      switchTab('reports');
+    });
+
+    // Event Listeners לסינון הזמנות
+    document.getElementById('orderFilters').addEventListener('click', function(e) {
+      if (e.target.classList.contains('filter-btn')) {
+        var filter = e.target.getAttribute('data-filter');
+        filterOrders(filter, e.target);
+      }
+    });
+
+    // Event Listener לחיפוש מוצרים
+    document.getElementById('searchInput').addEventListener('input', function() {
+      filterProducts();
+    });
+
+    // Event Listeners למודל
+    document.getElementById('addProductBtn').addEventListener('click', function() {
+      openProductModal();
+    });
+
+    document.getElementById('closeModalBtn').addEventListener('click', function() {
+      closeModal();
+    });
+
+    document.getElementById('saveProductBtn').addEventListener('click', function() {
+      saveProduct();
+    });
+
+    document.getElementById('prodImage').addEventListener('change', function() {
+      previewImage();
+    });
+
+    // פונקציות
     function switchTab(tab) {
-      currentTab = tab;
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-      event.target.classList.add('active');
+      document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        btn.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-content').forEach(function(content) {
+        content.classList.remove('active');
+      });
+
+      document.getElementById(tab + 'TabBtn').classList.add('active');
       document.getElementById(tab + 'Tab').classList.add('active');
+
       if (tab === 'products') loadProducts();
       if (tab === 'orders') loadOrders();
     }
 
-    async function loadOrders() {
-      try {
-        const response = await fetch('/orders');
-        orders = await response.json();
-        renderOrders();
-        updatePendingBadge();
-      } catch (error) {
-        console.error('שגיאה:', error);
-      }
+    function loadOrders() {
+      fetch('/orders')
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+          orders = data;
+          renderOrders();
+          updatePendingBadge();
+        })
+        .catch(function(error) {
+          console.error('שגיאה:', error);
+        });
     }
 
     function renderOrders() {
-      const list = document.getElementById('ordersList');
-      let filtered = currentFilter === 'all' ? orders : orders.filter(o => o.status === currentFilter);
+      var list = document.getElementById('ordersList');
+      var filtered = currentFilter === 'all' ? orders : orders.filter(function(o) {
+        return o.status === currentFilter;
+      });
+
       if (filtered.length === 0) {
         list.innerHTML = '<p style="text-align: center; color: white; padding: 50px;">אין הזמנות</p>';
         return;
       }
-      list.innerHTML = filtered.map(order => {
-        const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
-        const statusClass = order.status || 'pending';
-        const statusText = {pending: 'ממתינה', completed: 'הושלמה', cancelled: 'בוטלה'}[statusClass] || 'ממתינה';
-        return '<div class="order-card ' + statusClass + '">' +
-          '<div class="order-header">' +
-            '<div class="order-info">' +
-              '<h3>' + order.customer_name + '</h3>' +
-              '<p>📱 ' + order.customer_phone + '</p>' +
-              '<p>📅 ' + new Date(order.created_at).toLocaleString('he-IL') + '</p>' +
-              '<span class="order-status status-' + statusClass + '">' + statusText + '</span>' +
-            '</div>' +
-            '<div class="order-amount">' + parseFloat(order.total_amount).toFixed(2) + ' ₪</div>' +
+
+      list.innerHTML = '';
+      filtered.forEach(function(order) {
+        var items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+        var statusClass = order.status || 'pending';
+        var statusText = statusClass === 'pending' ? 'ממתינה' : (statusClass === 'completed' ? 'הושלמה' : 'בוטלה');
+
+        var card = document.createElement('div');
+        card.className = 'order-card ' + statusClass;
+
+        var itemsHtml = items.map(function(item) {
+          return '<div class="order-item"><span>' + item.name + ' x' + item.quantity + '</span><span>' + (item.price * item.quantity).toFixed(2) + ' ₪</span></div>';
+        }).join('');
+
+        card.innerHTML = '<div class="order-header">' +
+          '<div class="order-info">' +
+          '<h3>' + order.customer_name + '</h3>' +
+          '<p>📱 ' + order.customer_phone + '</p>' +
+          '<p>📅 ' + new Date(order.created_at).toLocaleString('he-IL') + '</p>' +
+          '<span class="order-status status-' + statusClass + '">' + statusText + '</span>' +
+          '</div>' +
+          '<div class="order-amount">' + parseFloat(order.total_amount).toFixed(2) + ' ₪</div>' +
           '</div>' +
           '<div class="order-details">' +
-            '<p><strong>סוג משלוח:</strong> ' + order.delivery_type + '</p>' +
-            '<p><strong>כתובת:</strong> ' + order.shipping_location + '</p>' +
-            '<p><strong>תשלום:</strong> ' + order.payment_method + '</p>' +
+          '<p><strong>סוג משלוח:</strong> ' + order.delivery_type + '</p>' +
+          '<p><strong>כתובת:</strong> ' + order.shipping_location + '</p>' +
+          '<p><strong>תשלום:</strong> ' + order.payment_method + '</p>' +
           '</div>' +
-          '<div class="order-items"><h4>פריטים:</h4>' +
-            items.map(item => '<div class="order-item"><span>' + item.name + ' x' + item.quantity + '</span><span>' + (item.price * item.quantity).toFixed(2) + ' ₪</span></div>').join('') +
-          '</div>' +
-          '<div class="order-actions">' +
-            '<button class="btn btn-info" onclick="window.open(\\'https://wa.me/' + order.customer_phone + '\\', \\'_blank\\')">📱 WhatsApp</button>' +
-            (order.status !== 'completed' ? '<button class="btn btn-success" onclick="updateOrderStatus(\\'' + order.id + '\\', \\'completed\\')">✅ הושלמה</button>' : '') +
-            (order.status !== 'cancelled' ? '<button class="btn btn-danger" onclick="updateOrderStatus(\\'' + order.id + '\\', \\'cancelled\\')">❌ בטל</button>' : '') +
-          '</div>' +
-        '</div>';
-      }).join('');
+          '<div class="order-items"><h4>פריטים:</h4>' + itemsHtml + '</div>' +
+          '<div class="order-actions"></div>';
+
+        var actionsDiv = card.querySelector('.order-actions');
+
+        var whatsappBtn = document.createElement('button');
+        whatsappBtn.className = 'btn btn-info';
+        whatsappBtn.textContent = '📱 WhatsApp';
+        whatsappBtn.addEventListener('click', function() {
+          window.open('https://wa.me/' + order.customer_phone, '_blank');
+        });
+        actionsDiv.appendChild(whatsappBtn);
+
+        var completeBtn = document.createElement('button');
+        completeBtn.className = 'btn btn-success';
+        completeBtn.textContent = '✅ הושלמה';
+        completeBtn.addEventListener('click', function() {
+          updateOrderStatus(order.id, 'completed');
+        });
+        actionsDiv.appendChild(completeBtn);
+
+        var cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-danger';
+        cancelBtn.textContent = '❌ בטל';
+        cancelBtn.addEventListener('click', function() {
+          updateOrderStatus(order.id, 'cancelled');
+        });
+        actionsDiv.appendChild(cancelBtn);
+
+        list.appendChild(card);
+      });
     }
 
-    function filterOrders(status) {
+    function filterOrders(status, btn) {
       currentFilter = status;
-      document.querySelectorAll('.filter-section .filter-btn').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
+      document.querySelectorAll('#orderFilters .filter-btn').forEach(function(b) {
+        b.classList.remove('active');
+      });
+      btn.classList.add('active');
       renderOrders();
     }
 
-    async function updateOrderStatus(orderId, status) {
+    function updateOrderStatus(orderId, status) {
       if (!confirm('האם אתה בטוח?')) return;
-      try {
-        const response = await fetch('/orders/' + orderId + '/status', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status })
+
+      fetch('/orders/' + orderId + '/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: status })
+      })
+        .then(function(response) {
+          if (response.ok) {
+            showNotification('✅ עודכן בהצלחה!');
+            loadOrders();
+          }
+        })
+        .catch(function(error) {
+          showNotification('❌ שגיאה', true);
         });
-        if (response.ok) {
-          showNotification('✅ עודכן בהצלחה!');
-          loadOrders();
-        }
-      } catch (error) {
-        showNotification('❌ שגיאה', true);
-      }
     }
 
     function updatePendingBadge() {
-      const pending = orders.filter(o => o.status === 'pending' || !o.status).length;
-      const badge = document.getElementById('pendingBadge');
+      var pending = orders.filter(function(o) {
+        return o.status === 'pending' || !o.status;
+      }).length;
+      var badge = document.getElementById('pendingBadge');
       badge.textContent = pending;
       badge.style.display = pending > 0 ? 'inline-block' : 'none';
     }
 
-    async function loadProducts() {
-      try {
-        const response = await fetch('/products');
-        products = await response.json();
-        renderCategoryFilters();
-        filterProducts();
-      } catch (error) {
-        console.error('שגיאה:', error);
-      }
+    function loadProducts() {
+      fetch('/products')
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+          products = data;
+          renderCategoryFilters();
+          filterProducts();
+        })
+        .catch(function(error) {
+          console.error('שגיאה:', error);
+        });
     }
 
     function renderCategoryFilters() {
-      const categories = ['הכל', 'שתייה', 'אלכוהול', 'טבק וסיגריות', 'גומי', 'חטיפים', 'גלונית', 'שוקולד', 'ממתקים', 'מזון מהיר', 'מוצרי קפה'];
-      document.getElementById('categoryFilters').innerHTML = categories.map(cat => 
-        '<button class="filter-btn' + (cat === currentCategory ? ' active' : '') + '" onclick="setCategory(\\'' + cat + '\\')">' + cat + '</button>'
-      ).join('');
+      var categories = ['הכל', 'שתייה', 'אלכוהול', 'טבק וסיגריות', 'גומי', 'חטיפים', 'גלונית', 'שוקולד', 'ממתקים', 'מזון מהיר', 'מוצרי קפה'];
+      var container = document.getElementById('categoryFilters');
+      container.innerHTML = '';
+
+      categories.forEach(function(cat) {
+        var btn = document.createElement('button');
+        btn.className = 'filter-btn' + (cat === currentCategory ? ' active' : '');
+        btn.textContent = cat;
+        btn.addEventListener('click', function() {
+          setCategory(cat);
+        });
+        container.appendChild(btn);
+      });
     }
 
     function setCategory(category) {
@@ -812,87 +983,228 @@ app.get('/admin', (req, res) => {
     }
 
     function filterProducts() {
-      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-      const filtered = products.filter(p => {
-        const categoryMatch = currentCategory === 'הכל' || (p.category && p.category.includes(currentCategory));
-        const searchMatch = p.name.toLowerCase().includes(searchTerm);
+      var searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      var filtered = products.filter(function(p) {
+        var categoryMatch = currentCategory === 'הכל' || (p.category && p.category.indexOf(currentCategory) !== -1);
+        var searchMatch = p.name.toLowerCase().indexOf(searchTerm) !== -1;
         return categoryMatch && searchMatch;
       });
       renderProducts(filtered);
     }
 
     function renderProducts(list) {
-      const grid = document.getElementById('productsGrid');
+      var grid = document.getElementById('productsGrid');
+      grid.innerHTML = '';
+
       if (list.length === 0) {
         grid.innerHTML = '<p style="color: white; text-align: center; grid-column: 1/-1;">אין מוצרים</p>';
         return;
       }
-      grid.innerHTML = list.map(p => {
-        const outOfStock = !p.in_stock;
-        const badge = outOfStock ? '<div style="position: absolute; top: 10px; right: 10px; background: red; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 12px; z-index: 10;">אזל</div>' : '';
-        return '<div class="product-card" style="' + (outOfStock ? 'opacity: 0.6; position: relative;' : '') + '">' +
-          badge +
-          (p.image_url ? '<img src="' + p.image_url + '" class="product-image" alt="' + p.name + '">' : '') +
-          '<div class="product-header">' +
-            '<div>' +
-              '<div class="product-name">' + p.name + '</div>' +
-              '<span class="product-category">' + (p.category || 'כללי') + '</span>' +
-            '</div>' +
-            '<div class="product-price">' + p.price + ' ₪</div>' +
-          '</div>' +
-          '<div class="product-actions">' +
-            '<button class="btn ' + (outOfStock ? 'btn-success' : 'btn-danger') + '" onclick="toggleStock(' + p.id + ', ' + outOfStock + ')">' + (outOfStock ? '✅ החזר' : '📦 הוצא') + '</button>' +
-            '<button class="btn btn-danger" onclick="deleteProduct(' + p.id + ', \\'' + p.name.replace(/'/g, "\\'") + '\\')">🗑️</button>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-    }
 
-    async function toggleStock(productId, newStatus) {
-      try {
-        const response = await fetch('/products/' + productId + '/stock', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ in_stock: newStatus })
+      list.forEach(function(p) {
+        var outOfStock = !p.in_stock;
+
+        var card = document.createElement('div');
+        card.className = 'product-card';
+        if (outOfStock) card.style.opacity = '0.6';
+
+        if (outOfStock) {
+          var badge = document.createElement('div');
+          badge.className = 'out-of-stock-badge';
+          badge.textContent = 'אזל';
+          card.appendChild(badge);
+        }
+
+        var editBtn = document.createElement('button');
+        editBtn.className = 'edit-icon';
+        editBtn.textContent = '✏️';
+        editBtn.addEventListener('click', function() {
+          editProduct(p.id);
         });
-        if (response.ok) {
-          showNotification(newStatus ? '✅ חזר למלאי!' : '📦 הוצא מהמלאי!');
-          const prod = products.find(p => p.id === productId);
-          if(prod) prod.in_stock = newStatus;
-          filterProducts();
+        card.appendChild(editBtn);
+
+        if (p.image_url) {
+          var img = document.createElement('img');
+          img.src = p.image_url;
+          img.className = 'product-image';
+          img.alt = p.name;
+          card.appendChild(img);
         }
-      } catch (error) {
-        showNotification('❌ שגיאה', true);
+
+        var header = document.createElement('div');
+        header.className = 'product-header';
+        header.innerHTML = '<div><div class="product-name">' + p.name + '</div><span class="product-category">' + (p.category || 'כללי') + '</span></div><div class="product-price">' + p.price + ' ₪</div>';
+        card.appendChild(header);
+
+        var actions = document.createElement('div');
+        actions.className = 'product-actions';
+
+        var stockBtn = document.createElement('button');
+        stockBtn.className = 'btn ' + (outOfStock ? 'btn-success' : 'btn-danger');
+        stockBtn.textContent = outOfStock ? '✅ החזר' : '📦 הוצא';
+        stockBtn.addEventListener('click', function() {
+          toggleStock(p.id, outOfStock);
+        });
+        actions.appendChild(stockBtn);
+
+        var deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-danger';
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.addEventListener('click', function() {
+          deleteProduct(p.id, p.name);
+        });
+        actions.appendChild(deleteBtn);
+
+        card.appendChild(actions);
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleStock(productId, newStatus) {
+      fetch('/products/' + productId + '/stock', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ in_stock: newStatus })
+      })
+        .then(function(response) {
+          if (response.ok) {
+            showNotification(newStatus ? '✅ חזר למלאי!' : '📦 הוצא מהמלאי!');
+            var prod = products.find(function(p) { return p.id === productId; });
+            if (prod) prod.in_stock = newStatus;
+            filterProducts();
+          }
+        })
+        .catch(function(error) {
+          showNotification('❌ שגיאה', true);
+        });
+    }
+
+    function deleteProduct(productId, name) {
+      if (!confirm('בטוח למחוק "' + name + '"?')) return;
+
+      fetch('/products/' + productId, { method: 'DELETE' })
+        .then(function(response) {
+          if (response.ok) {
+            showNotification('🗑️ נמחק!');
+            loadProducts();
+          }
+        })
+        .catch(function(error) {
+          showNotification('❌ שגיאה', true);
+        });
+    }
+
+    function loadAvailableImages() {
+      fetch('/available-images')
+        .then(function(response) { return response.json(); })
+        .then(function(images) {
+          availableImages = images;
+          var select = document.getElementById('prodImage');
+          select.innerHTML = '<option value="">-- בחר תמונה --</option>';
+          images.forEach(function(img) {
+            var option = document.createElement('option');
+            option.value = '/images/' + img;
+            option.textContent = img;
+            select.appendChild(option);
+          });
+        })
+        .catch(function(error) {
+          console.error('שגיאה בטעינת תמונות:', error);
+        });
+    }
+
+    function openProductModal() {
+      loadAvailableImages();
+      document.getElementById('modalTitle').textContent = 'מוצר חדש';
+      document.getElementById('editId').value = '';
+      document.getElementById('prodName').value = '';
+      document.getElementById('prodPrice').value = '';
+      document.getElementById('prodCategory').value = 'כללי';
+      document.getElementById('prodImage').value = '';
+      document.getElementById('imgPreview').style.display = 'none';
+      document.getElementById('productModal').classList.add('show');
+    }
+
+    function editProduct(productId) {
+      var product = products.find(function(p) { return p.id === productId; });
+      if (!product) return;
+
+      loadAvailableImages();
+      document.getElementById('modalTitle').textContent = 'ערוך מוצר';
+      document.getElementById('editId').value = product.id;
+      document.getElementById('prodName').value = product.name;
+      document.getElementById('prodPrice').value = product.price;
+      document.getElementById('prodCategory').value = product.category || 'כללי';
+
+      setTimeout(function() {
+        document.getElementById('prodImage').value = product.image_url || '';
+        if (product.image_url) {
+          document.getElementById('imgPreview').src = product.image_url;
+          document.getElementById('imgPreview').style.display = 'block';
+        }
+      }, 200);
+
+      document.getElementById('productModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('productModal').classList.remove('show');
+    }
+
+    function previewImage() {
+      var select = document.getElementById('prodImage');
+      var preview = document.getElementById('imgPreview');
+      if (select.value) {
+        preview.src = select.value;
+        preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
       }
     }
 
-    async function deleteProduct(productId, name) {
-      if (!confirm('בטוח למחוק "' + name + '"?')) return;
-      try {
-        const response = await fetch('/products/' + productId, { method: 'DELETE' });
-        if (response.ok) {
-          showNotification('🗑️ נמחק!');
-          loadProducts();
-        }
-      } catch (error) {
-        showNotification('❌ שגיאה', true);
+    function saveProduct() {
+      var id = document.getElementById('editId').value;
+      var name = document.getElementById('prodName').value;
+      var price = document.getElementById('prodPrice').value;
+      var category = document.getElementById('prodCategory').value;
+      var image_url = document.getElementById('prodImage').value;
+
+      if (!name || !price) {
+        showNotification('❌ נא למלא שם ומחיר', true);
+        return;
       }
+
+      var url = id ? '/products/' + id : '/products';
+      var method = id ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, price: price, image_url: image_url, category: category, in_stock: true })
+      })
+        .then(function(response) {
+          if (response.ok) {
+            showNotification(id ? '✅ מוצר עודכן!' : '✅ מוצר נוסף!');
+            closeModal();
+            loadProducts();
+          }
+        })
+        .catch(function(error) {
+          showNotification('❌ שגיאה', true);
+        });
     }
 
     function showNotification(message, isError) {
-      const notif = document.getElementById('notification');
+      var notif = document.getElementById('notification');
       notif.textContent = message;
       notif.style.background = isError ? '#f44336' : '#4caf50';
       notif.classList.add('show');
-      setTimeout(() => notif.classList.remove('show'), 3000);
+      setTimeout(function() {
+        notif.classList.remove('show');
+      }, 3000);
     }
 
-    const socket = io();
-    socket.on('new_order', (order) => {
-      showNotification('🔔 הזמנה חדשה!');
-      loadOrders();
-    });
-
+    // טעינה ראשונית
     loadOrders();
     setInterval(loadOrders, 30000);
   </script>
