@@ -64,15 +64,15 @@ app.get('/available-images', (req, res) => {
 
 // נתיב חדש ליצירת הזמנה במסד הנתונים
 app.post('/orders', async (req, res) => {
-  const { 
-    customer_name, 
-    customer_phone, 
-    total_amount, 
-    delivery_type, 
-    shipping_location, 
-    is_custom_location, 
-    payment_method, 
-    items 
+  const {
+    customer_name,
+    customer_phone,
+    total_amount,
+    delivery_type,
+    shipping_location,
+    is_custom_location,
+    payment_method,
+    items
   } = req.body;
 
   try {
@@ -82,12 +82,12 @@ app.post('/orders', async (req, res) => {
       RETURNING *;
     `;
     const values = [customer_name, customer_phone, total_amount, delivery_type, shipping_location, is_custom_location, payment_method, JSON.stringify(items)];
-    
+
     const result = await pool.query(query, values);
-    
+
     // שליחת עדכון בזמן אמת אם יש ממשק ניהול שמחובר ב-Socket
     io.emit('new_order', result.rows[0]);
-    
+
     res.status(201).json({ success: true, order: result.rows[0] });
   } catch (err) {
     console.error('❌ שגיאה בשמירת הזמנה:', err.message);
@@ -134,10 +134,10 @@ app.delete('/orders/:id', async (req, res) => {
   try {
     const { id } = req.params;
     await pool.query('DELETE FROM orders WHERE id = $1', [id]);
-    
+
     // שליחת עדכון בזמן אמת
     io.emit('order_deleted', { id });
-    
+
     res.json({ success: true, message: 'הזמנה נמחקה בהצלחה' });
   } catch (err) {
     console.error('❌ שגיאה במחיקת הזמנה:', err.message);
@@ -157,10 +157,10 @@ app.get('/products', async (req, res) => {
 
 app.post('/products', async (req, res) => {
   try {
-    const { name, price, image_url, category } = req.body;
+    const { name, price, image_url, category, min_quantity, max_quantity } = req.body;
     const result = await pool.query(
-      'INSERT INTO products (name, price, image_url, category) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, price, image_url || '', category || 'כללי']
+      'INSERT INTO products (name, price, image_url, category, min_quantity, max_quantity) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [name, price, image_url || '', category || 'כללי', min_quantity || 1, max_quantity || null]
     );
     notifyAllClients();
     res.json({ success: true, product: result.rows[0] });
@@ -172,11 +172,10 @@ app.post('/products', async (req, res) => {
 
 app.put('/products/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, price, image_url, category, in_stock } = req.body;
+    const { name, price, image_url, category, in_stock, min_quantity, max_quantity } = req.body;
     const result = await pool.query(
-      'UPDATE products SET name = $1, price = $2, image_url = $3, category = $4, in_stock = $5 WHERE id = $6 RETURNING *',
-      [name, price, image_url, category, in_stock !== undefined ? in_stock : true, id]
+      'UPDATE products SET name = $1, price = $2, image_url = $3, category = $4, in_stock = $5, min_quantity = $6, max_quantity = $7 WHERE id = $8 RETURNING *',
+      [name, price, image_url, category, in_stock !== undefined ? in_stock : true, min_quantity || 1, max_quantity || null, id]
     );
     notifyAllClients();
     res.json({ success: true, product: result.rows[0] });
@@ -657,15 +656,15 @@ app.get('/admin', (req, res) => {
     </header>
 
     <div class="tabs">
-      <button class="tab-btn" id="productsTabBtn">📦 ניהול מוצרים</button>
-      <button class="tab-btn active" id="ordersTabBtn">
+  <button class="tab-btn active" id="productsTabBtn">📦 ניהול מוצרים</button>
+  <button class="tab-btn" id="ordersTabBtn">
         <span class="badge" id="pendingBadge" style="display:none;">0</span>
         🛒 הזמנות
       </button>
       <button class="tab-btn" id="reportsTabBtn">📊 דוחות</button>
     </div>
 
-    <div class="tab-content active" id="ordersTab">
+    <div class="tab-content" id="ordersTab">
       <div class="filter-section">
         <div class="filter-buttons" id="orderFilters">
           <button class="filter-btn active" data-filter="all">הכל</button>
@@ -679,7 +678,7 @@ app.get('/admin', (req, res) => {
       </div>
     </div>
 
-    <div class="tab-content" id="productsTab">
+    <div class="tab-content active" id="productsTab">
       <div class="controls-area">
         <input type="text" id="searchInput" class="search-box" placeholder="🔍 חפש מוצר...">
         <div class="filter-buttons" id="categoryFilters"></div>
@@ -729,7 +728,18 @@ app.get('/admin', (req, res) => {
           <option value="מוצרי קפה">מוצרי קפה</option>
         </select>
       </div>
-      <div class="form-group">
+
+     <div class="form-group">
+        <label>כמות מינימום להזמנה</label>
+        <input type="number" id="prodMinQty" class="form-control" min="1" value="1" placeholder="1">
+        <small style="color: #666;">השאר 1 אם אין מינימום מיוחד</small>
+        </div>
+        <div class="form-group">
+        <label>כמות מקסימום להזמנה (אופציונלי)</label>
+        <input type="number" id="prodMaxQty" class="form-control" min="1" placeholder="ללא הגבלה">
+        <small style="color: #666;">השאר ריק אם אין הגבלה</small>
+        </div>
+        <div class="form-group">
         <label>בחר תמונה (מהמאגר בשרת)</label>
         <select id="prodImage" class="form-control">
           <option value="">-- בחר תמונה --</option>
@@ -737,10 +747,10 @@ app.get('/admin', (req, res) => {
         <div style="text-align: center; margin-top: 10px;">
           <img id="imgPreview" src="" style="max-height: 100px; display: none; border-radius: 10px; border: 1px solid #ddd;">
         </div>
-      </div>
-      <button class="btn btn-success" id="saveProductBtn" style="width: 100%; padding: 15px; margin-top: 10px; font-size: 18px;">
+        </div>
+        <button class="btn btn-success" id="saveProductBtn" style="width: 100%; padding: 15px; margin-top: 10px; font-size: 18px;">
         💾 שמור מוצר
-      </button>
+        </button>
     </div>
   </div>
 
@@ -920,23 +930,21 @@ app.get('/admin', (req, res) => {
     }
 
     function updateOrderStatus(orderId, status) {
-      if (!confirm('האם אתה בטוח?')) return;
+  if (!confirm('האם אתה בטוח?')) return;
 
-      fetch('/orders/' + orderId + '/status', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: status })
-      })
-        .then(function(response) {
-          if (response.ok) {
-            showNotification('✅ עודכן בהצלחה!');
-            loadOrders();
-          }
-        })
-        .catch(function(error) {
-          showNotification('❌ שגיאה', true);
-        });
-    }
+  fetch('/orders/' + orderId, {
+    method: 'DELETE'
+  })
+    .then(function(response) {
+      if (response.ok) {
+        showNotification('✅ הזמנה הוסרה!');
+        loadOrders();
+      }
+    })
+    .catch(function(error) {
+      showNotification('❌ שגיאה', true);
+    });
+  }
 
     function updatePendingBadge() {
       var pending = orders.filter(function(o) {
@@ -1121,6 +1129,8 @@ app.get('/admin', (req, res) => {
       document.getElementById('prodPrice').value = '';
       document.getElementById('prodCategory').value = 'כללי';
       document.getElementById('prodImage').value = '';
+      document.getElementById('prodMinQty').value = '1';
+      document.getElementById('prodMaxQty').value = '';
       document.getElementById('imgPreview').style.display = 'none';
       document.getElementById('productModal').classList.add('show');
     }
@@ -1138,11 +1148,13 @@ app.get('/admin', (req, res) => {
 
       setTimeout(function() {
         document.getElementById('prodImage').value = product.image_url || '';
-        if (product.image_url) {
-          document.getElementById('imgPreview').src = product.image_url;
-          document.getElementById('imgPreview').style.display = 'block';
-        }
-      }, 200);
+        document.getElementById('prodMinQty').value = product.min_quantity || 1;
+        document.getElementById('prodMaxQty').value = product.max_quantity || '';
+          if (product.image_url) {
+        document.getElementById('imgPreview').src = product.image_url;
+        document.getElementById('imgPreview').style.display = 'block';
+      }
+    }, 200);
 
       document.getElementById('productModal').classList.add('show');
     }
@@ -1163,12 +1175,12 @@ app.get('/admin', (req, res) => {
     }
 
     function saveProduct() {
-      var id = document.getElementById('editId').value;
       var name = document.getElementById('prodName').value;
       var price = document.getElementById('prodPrice').value;
       var category = document.getElementById('prodCategory').value;
       var image_url = document.getElementById('prodImage').value;
-
+      var min_quantity = parseInt(document.getElementById('prodMinQty').value) || 1;
+      var max_quantity = document.getElementById('prodMaxQty').value ? parseInt(document.getElementById('prodMaxQty').value) : null;
       if (!name || !price) {
         showNotification('❌ נא למלא שם ומחיר', true);
         return;
@@ -1180,7 +1192,7 @@ app.get('/admin', (req, res) => {
       fetch(url, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name, price: price, image_url: image_url, category: category, in_stock: true })
+        body: JSON.stringify({ name: name, price: price, image_url: image_url, category: category, in_stock: true, min_quantity: min_quantity, max_quantity: max_quantity })
       })
         .then(function(response) {
           if (response.ok) {
@@ -1205,6 +1217,7 @@ app.get('/admin', (req, res) => {
     }
 
     // טעינה ראשונית
+    loadProducts();
     loadOrders();
     setInterval(loadOrders, 30000);
   </script>
