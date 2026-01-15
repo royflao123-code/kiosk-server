@@ -156,31 +156,30 @@ app.get('/products', async (req, res) => {
 });
 
 app.post('/products', async (req, res) => {
+  const { name, price, image_url, category, in_stock, min_quantity, max_quantity } = req.body;
   try {
-    const { name, price, image_url, category, min_quantity, max_quantity } = req.body;
     const result = await pool.query(
-      'INSERT INTO products (name, price, image_url, category, min_quantity, max_quantity) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [name, price, image_url || '', category || 'כללי', min_quantity || 1, max_quantity || null]
+      'INSERT INTO products (name, price, image_url, category, in_stock, min_quantity, max_quantity) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [name, price, image_url, category, in_stock || true, min_quantity || 1, max_quantity || null]
     );
     notifyAllClients();
-    res.json({ success: true, product: result.rows[0] });
+    res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error('❌ שגיאה בהוספת מוצר:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
 app.put('/products/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, price, image_url, category, in_stock, min_quantity, max_quantity } = req.body;
   try {
-    const { name, price, image_url, category, in_stock, min_quantity, max_quantity } = req.body;
     const result = await pool.query(
-      'UPDATE products SET name = $1, price = $2, image_url = $3, category = $4, in_stock = $5, min_quantity = $6, max_quantity = $7 WHERE id = $8 RETURNING *',
-      [name, price, image_url, category, in_stock !== undefined ? in_stock : true, min_quantity || 1, max_quantity || null, id]
+      'UPDATE products SET name=$1, price=$2, image_url=$3, category=$4, in_stock=$5, min_quantity=$6, max_quantity=$7 WHERE id=$8 RETURNING *',
+      [name, price, image_url, category, in_stock, min_quantity, max_quantity, id]
     );
     notifyAllClients();
-    res.json({ success: true, product: result.rows[0] });
+    res.json(result.rows[0]);
   } catch (err) {
-    console.error('❌ שגיאה בעדכון מוצר:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -1175,37 +1174,38 @@ app.get('/admin', (req, res) => {
     }
 
     function saveProduct() {
-      var id = document.getElementById('editId').value;
-      var name = document.getElementById('prodName').value;
-      var price = document.getElementById('prodPrice').value;
-      var category = document.getElementById('prodCategory').value;
-      var image_url = document.getElementById('prodImage').value;
-      var min_quantity = parseInt(document.getElementById('prodMinQty').value) || 1;
-      var max_quantity = document.getElementById('prodMaxQty').value ? parseInt(document.getElementById('prodMaxQty').value) : null;
-      if (!name || !price) {
-        showNotification('❌ נא למלא שם ומחיר', true);
-        return;
+  var id = document.getElementById('editId').value;
+  var name = document.getElementById('prodName').value;
+  var price = document.getElementById('prodPrice').value;
+  var category = document.getElementById('prodCategory').value;
+  var image_url = document.getElementById('prodImage').value;
+  var min_quantity = parseInt(document.getElementById('prodMinQty').value) || 1;
+  var max_quantity = document.getElementById('prodMaxQty').value ? parseInt(document.getElementById('prodMaxQty').value) : null;
+
+  if (!name || !price) {
+    showNotification('❌ נא למלא שם ומחיר', true);
+    return;
+  }
+
+  var url = id ? '/products/' + id : '/products';
+  var method = id ? 'PUT' : 'POST';
+
+  fetch(url, {
+    method: method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name, price: price, image_url: image_url, category: category, in_stock: true, min_quantity: min_quantity, max_quantity: max_quantity })
+  })
+    .then(function(response) {
+      if (response.ok) {
+        showNotification(id ? '✅ מוצר עודכן!' : '✅ מוצר נוסף!');
+        closeModal();
+        loadProducts();
       }
-
-      var url = id ? '/products/' + id : '/products';
-      var method = id ? 'PUT' : 'POST';
-
-      fetch(url, {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name, price: price, image_url: image_url, category: category, in_stock: true, min_quantity: min_quantity, max_quantity: max_quantity })
-      })
-        .then(function(response) {
-          if (response.ok) {
-            showNotification(id ? '✅ מוצר עודכן!' : '✅ מוצר נוסף!');
-            closeModal();
-            loadProducts();
-          }
-        })
-        .catch(function(error) {
-          showNotification('❌ שגיאה', true);
-        });
-    }
+    })
+    .catch(function(error) {
+      showNotification('❌ שגיאה', true);
+    });
+}
 
     function showNotification(message, isError) {
       var notif = document.getElementById('notification');
