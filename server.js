@@ -160,7 +160,7 @@ app.post('/products', async (req, res) => {
   try {
     const result = await pool.query(
       'INSERT INTO products (name, price, image_url, category, in_stock, min_quantity, max_quantity) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [name, price, image_url, category, in_stock || true, min_quantity || 1, max_quantity || null]
+      [name, price, image_url, category, in_stock, min_quantity || 1, max_quantity || null]
     );
     notifyAllClients();
     res.status(201).json(result.rows[0]);
@@ -1298,7 +1298,7 @@ app.get('/send-daily-whatsapp', async (req, res) => {
       });
     }
 
-    const phoneNumber = '972556659494';
+    const phoneNumber = '972528668315';
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
     res.send(`
@@ -1540,7 +1540,7 @@ cron.schedule('30 19 * * *', async () => {
   const message = await generateDailyReport();
 
   if (message) {
-    const phoneNumber = '972500000000';
+    const phoneNumber = '972528668315';
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
     console.log('📊 ════════════════════════════════════');
